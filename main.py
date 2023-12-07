@@ -100,7 +100,7 @@ class MainApp(QMainWindow, FORM_CLASS): # go to the main window in the form_clas
         #print(image_path)
 
     def display_image(self):
-            image_data = image_instance.get_image_data()
+            image_data = self.image_instance.get_image_data()
             h, w = image_data.shape
             bytes_per_line = w
             q_image = QImage(image_data.data, w, h, bytes_per_line, QImage.Format_Grayscale8)
