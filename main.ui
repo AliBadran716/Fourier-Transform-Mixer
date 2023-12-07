@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1379</width>
-    <height>911</height>
+    <height>748</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -19,6 +19,13 @@
      <layout class="QHBoxLayout" name="horizontalLayout_20">
       <item>
        <layout class="QHBoxLayout" name="horizontalLayout_17">
+        <item>
+         <widget class="QPushButton" name="browsing_pushButton">
+          <property name="text">
+           <string>Browse</string>
+          </property>
+         </widget>
+        </item>
         <item>
          <widget class="QComboBox" name="comboBox">
           <item>
@@ -649,7 +656,7 @@
      <x>0</x>
      <y>0</y>
      <width>1379</width>
-     <height>26</height>
+     <height>24</height>
     </rect>
    </property>
   </widget>
