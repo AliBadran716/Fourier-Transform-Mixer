@@ -1,4 +1,3 @@
-Certainly! Below is a modified version suitable for a README file, using markdown for better readability:
 
 ---
 
