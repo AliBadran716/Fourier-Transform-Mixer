@@ -20,6 +20,11 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QImage, QPixmap
 import sys
 from image import Image
+from PyQt5.QtWidgets import QGraphicsScene
+from PyQt5.QtWidgets import QGraphicsPixmapItem
+from PyQt5.QtCore import QRectF
+from PyQt5.QtWidgets import QSizePolicy
+from PyQt5.QtGui import QPainter
 
 FORM_CLASS, _ = loadUiType(path.join(path.dirname(__file__), "main.ui"))  # connects the Ui file with the Python file
 
@@ -34,13 +39,15 @@ class MainApp(QMainWindow, FORM_CLASS): # go to the main window in the form_clas
         """
         super(MainApp, self).__init__(parent)
         self.setupUi(self)
-        self.images_list = []  # List to store Image instances
+        self.images_dict = {}  # A dictionary to store Image instances
+        self.images_counter = 0 # A counter to keep track of the number of images
         self.browsing_pushButton.clicked.connect(self.browse_image)
         # Load the original image
         original_pixmap = QPixmap("contrast.png")
 
         # Resize the image to 5x5 pixels
         resized_pixmap = original_pixmap.scaled(35, 35, Qt.KeepAspectRatio)
+
 
         # Calculate the initial position
         self.calculate_position()
@@ -52,6 +59,11 @@ class MainApp(QMainWindow, FORM_CLASS): # go to the main window in the form_clas
 
         # Store the initial window state
         self.prev_window_state = self.windowState()
+
+        # Create a QGraphicsScene for the view
+        self.image_1_scene = QGraphicsScene(self.image_1_widget)
+        self.image_1_widget.setScene(self.image_1_scene)
+
 
     def calculate_position(self):
         # Calculate the position to center at the top
@@ -73,22 +85,54 @@ class MainApp(QMainWindow, FORM_CLASS): # go to the main window in the form_clas
                 # Update the previous window state
                 self.prev_window_state = self.windowState()
 
-
+     
     def browse_image(self):
+        if self.images_counter == 4:
+            return
+        self.images_counter += 1
         # browse and get the image path as .jpg or .gif or .png or .jpeg or .svg
         image_path, _ = QFileDialog.getOpenFileName(self, "Open Image", "", "Image Files (*.jpg *.gif *.png *.jpeg *.svg)")
         self.image_instance = Image(str(image_path))
-        #self.display_image()
+        image_name = f"image_{self.images_counter}"
+        # Store the ImageProcessor instance in the dictionary
+        self.images_dict[image_name] = self.image_instance
+        self.display_image()
         #print(image_path)
 
-    # def display_image(self):
-    #     if self.image_instance:
-    #         image_data = self.image_instance.get_image_data()
-    #         h, w = image_data.shape
-    #         bytes_per_line = w
-    #         q_image = QImage(image_data.data, w, h, bytes_per_line, QImage.Format_Grayscale8)
-    #         pixmap = QPixmap.fromImage(q_image)
-    #         self.image_label.setPixmap(pixmap)
+    def display_image(self):
+            image_data = image_instance.get_image_data()
+            h, w = image_data.shape
+            bytes_per_line = w
+            q_image = QImage(image_data.data, w, h, bytes_per_line, QImage.Format_Grayscale8)
+            pixmap = QPixmap.fromImage(q_image)
+            # Get the corresponding image widget
+            image_widget = getattr(self, f"image_{self.images_counter}_widget")
+            # Create the QGraphicsScene and set it for the respective image widget
+            image_scene = self.create_image_scene(image_widget)
+            # Clear the scene before adding a new item
+            image_scene.clear()
+            # Create a QGraphicsPixmapItem and add it to the scene
+            pixmap_item = QGraphicsPixmapItem(pixmap)
+            image_scene.addItem(pixmap_item)
+            # Set the initial view to fit the scene content
+            initial_view_rect = QRectF(0, 0, w, h)
+            image_widget.setSceneRect(initial_view_rect)
+            image_widget.fitInView(initial_view_rect, Qt.KeepAspectRatio)
+
+    def create_image_scene(self, image_view):
+            image_scene = QGraphicsScene(image_view)
+            image_view.setScene(image_scene)
+            # Set size policy and other properties as needed
+            image_view.setAlignment(Qt.AlignCenter)
+            image_view.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+            # Set render hints for smoother rendering (optional)
+            image_view.setRenderHint(QPainter.Antialiasing, True)
+            image_view.setRenderHint(QPainter.SmoothPixmapTransform, True)
+            image_view.setRenderHint(QPainter.HighQualityAntialiasing, True)
+            return image_scene
+
+            
+                
 
     # def mix_images(self):
     #     # Implement logic to mix images using the slider value
