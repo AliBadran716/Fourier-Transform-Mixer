@@ -8,7 +8,7 @@ import pyqtgraph as pg
 import numpy as np
 import pandas as pd
 
-
+from image import image_class
 
 import os
 import sys
