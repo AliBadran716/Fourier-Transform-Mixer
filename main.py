@@ -36,6 +36,42 @@ class MainApp(QMainWindow, FORM_CLASS): # go to the main window in the form_clas
         self.setupUi(self)
         self.images_list = []  # List to store Image instances
         self.browsing_pushButton.clicked.connect(self.browse_image)
+        # Load the original image
+        original_pixmap = QPixmap("contrast.png")
+
+        # Resize the image to 5x5 pixels
+        resized_pixmap = original_pixmap.scaled(35, 35, Qt.KeepAspectRatio)
+
+        # Calculate the initial position
+        self.calculate_position()
+
+        # Create a QLabel and set its size and position
+        self.image_label = QLabel(self)
+        self.image_label.setGeometry(self.center_x, self.top_y, resized_pixmap.width(), resized_pixmap.height())
+        self.image_label.setPixmap(resized_pixmap)
+
+        # Store the initial window state
+        self.prev_window_state = self.windowState()
+
+    def calculate_position(self):
+        # Calculate the position to center at the top
+        if self.isMaximized():
+            self.center_x = 824
+        else:
+            self.center_x = 585
+        self.top_y = 0  # Set the top y-coordinate as an instance variable
+
+    def changeEvent(self, event):
+        if event.type() == event.WindowStateChange:
+            # Check if the window state has changed
+            if self.prev_window_state != self.windowState():
+                # Recalculate the position when the window state changes (e.g., maximized)
+                self.calculate_position()
+                self.image_label.setGeometry(self.center_x, self.top_y, self.image_label.pixmap().width(),
+                                             self.image_label.pixmap().height())
+
+                # Update the previous window state
+                self.prev_window_state = self.windowState()
 
 
     def browse_image(self):
