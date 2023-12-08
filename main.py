@@ -60,9 +60,8 @@ class MainApp(QMainWindow, FORM_CLASS): # go to the main window in the form_clas
         # Store the initial window state
         self.prev_window_state = self.windowState()
 
-        # Create a QGraphicsScene for the view
-        self.image_1_scene = QGraphicsScene(self.image_1_widget)
-        self.image_1_widget.setScene(self.image_1_scene)
+        self.image_1_widget.setFixedSize(500, 170)
+        self.graphicsView_1.setFixedSize(500, 170)
 
 
     def calculate_position(self):
@@ -100,24 +99,31 @@ class MainApp(QMainWindow, FORM_CLASS): # go to the main window in the form_clas
         #print(image_path)
 
     def display_image(self):
-            image_data = self.image_instance.get_image_data()
+        for image_index, (image_name, image_instance) in enumerate(self.images_dict.items(), start=1):
+            image_data = image_instance.get_image_data()
             h, w = image_data.shape
             bytes_per_line = w
             q_image = QImage(image_data.data, w, h, bytes_per_line, QImage.Format_Grayscale8)
             pixmap = QPixmap.fromImage(q_image)
+
             # Get the corresponding image widget
-            image_widget = getattr(self, f"image_{self.images_counter}_widget")
+            image_widget = getattr(self, f"image_{image_index}_widget")
+
             # Create the QGraphicsScene and set it for the respective image widget
             image_scene = self.create_image_scene(image_widget)
+
             # Clear the scene before adding a new item
             image_scene.clear()
+
             # Create a QGraphicsPixmapItem and add it to the scene
             pixmap_item = QGraphicsPixmapItem(pixmap)
             image_scene.addItem(pixmap_item)
+
             # Set the initial view to fit the scene content
             initial_view_rect = QRectF(0, 0, w, h)
             image_widget.setSceneRect(initial_view_rect)
             image_widget.fitInView(initial_view_rect, Qt.KeepAspectRatio)
+
 
     def create_image_scene(self, image_view):
             image_scene = QGraphicsScene(image_view)
@@ -130,6 +136,17 @@ class MainApp(QMainWindow, FORM_CLASS): # go to the main window in the form_clas
             image_view.setRenderHint(QPainter.SmoothPixmapTransform, True)
             image_view.setRenderHint(QPainter.HighQualityAntialiasing, True)
             return image_scene
+    
+
+    def get_min_size(self):
+        # Get the minimum width and height of all images in the dictionary
+        min_width = min_height = sys.maxsize
+        for image_name, image_instance in self.images_dict.items():
+            image_data = image_instance.get_image_data()
+            h, w = image_data.shape
+            min_width = min(min_width, w)
+            min_height = min(min_height, h)
+        #return min_width, min_height
 
             
                 
