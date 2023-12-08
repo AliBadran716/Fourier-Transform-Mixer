@@ -6,7 +6,7 @@ from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import QApplication, QFileDialog
 from PyQt5.uic import loadUiType
 import pyqtgraph as pg
-
+import cv2
 import numpy as np
 import pandas as pd
 
@@ -99,11 +99,17 @@ class MainApp(QMainWindow, FORM_CLASS): # go to the main window in the form_clas
         #print(image_path)
 
     def display_image(self):
+        min_width, min_height = self.get_min_size()
+        
         for image_index, (image_name, image_instance) in enumerate(self.images_dict.items(), start=1):
             image_data = image_instance.get_image_data()
-            h, w = image_data.shape
-            bytes_per_line = w
-            q_image = QImage(image_data.data, w, h, bytes_per_line, QImage.Format_Grayscale8)
+            
+            # Resize the image while maintaining the aspect ratio
+            resized_image = cv2.resize(image_data, (min_width, min_height))
+            height, width = resized_image.shape
+            bytes_per_line = width
+            
+            q_image = QImage(resized_image.data, width, height, bytes_per_line, QImage.Format_Grayscale8)
             pixmap = QPixmap.fromImage(q_image)
 
             # Get the corresponding image widget
@@ -120,7 +126,7 @@ class MainApp(QMainWindow, FORM_CLASS): # go to the main window in the form_clas
             image_scene.addItem(pixmap_item)
 
             # Set the initial view to fit the scene content
-            initial_view_rect = QRectF(0, 0, w, h)
+            initial_view_rect = QRectF(0, 0, width, height)
             image_widget.setSceneRect(initial_view_rect)
             image_widget.fitInView(initial_view_rect, Qt.KeepAspectRatio)
 
@@ -146,7 +152,7 @@ class MainApp(QMainWindow, FORM_CLASS): # go to the main window in the form_clas
             h, w = image_data.shape
             min_width = min(min_width, w)
             min_height = min(min_height, h)
-        #return min_width, min_height
+        return min_width, min_height
 
             
                 
