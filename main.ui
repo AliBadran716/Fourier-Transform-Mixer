@@ -19,14 +19,14 @@
      <layout class="QHBoxLayout" name="horizontalLayout_20">
       <item>
        <layout class="QHBoxLayout" name="horizontalLayout_17">
-        <item alignment="Qt::AlignVCenter">
+        <item>
          <widget class="QPushButton" name="browsing_pushButton">
           <property name="text">
            <string>Browse</string>
           </property>
          </widget>
         </item>
-        <item alignment="Qt::AlignVCenter">
+        <item>
          <widget class="QComboBox" name="comboBox">
           <item>
            <property name="text">
@@ -58,6 +58,13 @@
             <string>Mixed 2</string>
            </property>
           </item>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="Delete_button">
+          <property name="text">
+           <string>Delete</string>
+          </property>
          </widget>
         </item>
         <item>
