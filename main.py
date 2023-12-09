@@ -26,6 +26,7 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QImage, QPixmap
 import sys
+import functools
 from image import Image
 from PyQt5.QtWidgets import QGraphicsScene
 from PyQt5.QtWidgets import QGraphicsPixmapItem
@@ -52,95 +53,74 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
         self.setupUi(self)
         self.images_dict = {}  # A dictionary to store Image instances
         self.images_counter = 0  # A counter to keep track of the number of images
-        self.browsing_pushButton.clicked.connect(self.browse_image)
-        # Load the original image
-        original_pixmap = QPixmap("contrast.png")
-        # Resize the image to 5x5 pixels
-        resized_pixmap = original_pixmap.scaled(35, 35, Qt.KeepAspectRatio)
-        # Calculate the initial position
-        self.calculate_position()
-        # Create a QLabel and set its size and position
-        self.image_label = QLabel(self)
-        self.image_label.setGeometry(
-            self.center_x, self.top_y, resized_pixmap.width(), resized_pixmap.height()
-        )
-        self.image_label.setPixmap(resized_pixmap)
         # Store the initial window state
-        self.prev_window_state = self.windowState()
-        self.image_1_widget.setFixedSize(500, 170)
-        self.graphicsView_1.setFixedSize(500, 170)
-        # self.image_1_widget_active = True
-        # self.image_2_widget_active = False
-        # self.image_3_widget_active = False
-        # self.image_4_widget_active = False
-        # self.handle_button()
+        self.image_1_widget_active = True
+        self.image_2_widget_active = False
+        self.image_3_widget_active = False
+        self.image_4_widget_active = False
+        # Set up the QGraphicsScene for the view
+        scene = QGraphicsScene()
+        self.setScene(scene)
+        # Connect the mouse press event to the handle_buttons method
+        self.handle_button()
 
-    # def handle_button(self):
-    # self.Delete_button.clicked.connect(self.delete_image)
-    # self.graphicsView_1.scene().sigMouseClicked.connect(self.on_mouse_click_1)
-    # self.graphicsView_2.scene().sigMouseClicked.connect(self.on_mouse_click_2)
-    # self.graphicsView_3.scene().sigMouseClicked.connect(self.on_mouse_click_3)
-    # self.graphicsView_4.scene().sigMouseClicked.connect(self.on_mouse_click_4)
+    def handle_button(self):
+        self.browsing_pushButton.clicked.connect(self.browse_image)
+        # List of widgets to handle
+        widgets_to_handle = [
+            self.image_1_widget,
+            self.image_2_widget,
+            self.image_3_widget,
+            self.image_4_widget
+        ]
+        # Connect mouseDoubleClickEvent for each widget
+        for widget in widgets_to_handle:
+            widget.mouseDoubleClickEvent = lambda event, w=widget: self.on_mouse_click(event, w)
 
-    # def on_mouse_click_1(self, event):
-    #     if event.button() == pg.QtCore.Qt.LeftButton:
-    #         self.image_1_widget_active = True
-    #         self.image_2_widget_active = False
-    #         self.image_3_widget_active = False
-    #         self.image_4_widget_active = False
-    #         self.graphicsView_1.setStyleSheet("border: 1px solid  rgb(0, 133, 255);;")
-    #         self.graphicsView_2.setStyleSheet("border: 1px solid rgba(0, 0, 0, 0.20);")
+            # Connect currentIndexChanged for each QComboBox using a loop
+        for i in range(1, 4):
+            combobox = getattr(self, f"FT_combo_box_{i}")
+            widget = getattr(self, f"graphicsView_{i}")
+            combobox.currentIndexChanged.connect(functools.partial(self.plot_FT, widget, combobox))
 
-    # def on_mouse_click_2(self, event):
-    #     if event.button() == pg.QtCore.Qt.LeftButton:
-    #         self.image_1_widget_active = False
-    #         self.image_2_widget_active = True
-    #         self.image_3_widget_active = False
-    #         self.image_4_widget_active = False
-    #         self.graphicsView_2.setStyleSheet("border: 1px solid  rgb(0, 133, 255);;")
-    #         self.graphicsView_1.setStyleSheet("border: 1px solid rgba(0, 0, 0, 0.20);")
 
-    # def on_mouse_click_3(self, event):
-    #     if event.button() == pg.QtCore.Qt.LeftButton:
-    #         self.image_1_widget_active = False
-    #         self.image_2_widget_active = False
-    #         self.image_3_widget_active = True
-    #         self.image_4_widget_active = False
-    #         self.graphicsView_2.setStyleSheet("border: 1px solid  rgb(0, 133, 255);;")
-    #         self.graphicsView_1.setStyleSheet("border: 1px solid rgba(0, 0, 0, 0.20);")
 
-    # def on_mouse_click_4(self, event):
-    #     if event.button() == pg.QtCore.Qt.LeftButton:
-    #         self.image_1_widget_active = False
-    #         self.image_2_widget_active = False
-    #         self.image_3_widget_active = False
-    #         self.image_4_widget_active = True
-    #         self.graphicsView_2.setStyleSheet("border: 1px solid  rgb(0, 133, 255);;")
-    #         self.graphicsView_1.setStyleSheet("border: 1px solid rgba(0, 0, 0, 0.20);")
+    def setScene(self, scene):
+        self.image_1_widget.setScene(scene)
+        self.image_2_widget.setScene(scene)
+        self.image_3_widget.setScene(scene)
+        self.image_4_widget.setScene(scene)
 
-    def calculate_position(self):
-        # Calculate the position to center at the top
-        if self.isMaximized():
-            self.center_x = 845
-        else:
-            self.center_x = 600
-        self.top_y = 0  # Set the top y-coordinate as an instance variable
+    def on_mouse_click(self, event, widget):
+        if event.button() == pg.QtCore.Qt.LeftButton:
+            self.update_active_widget(widget)
+            self.browse_image()
+        if event.button() == pg.QtCore.Qt.RightButton:
+            self.delete_image(widget)
 
-    def changeEvent(self, event):
-        if event.type() == event.WindowStateChange:
-            # Check if the window state has changed
-            if self.prev_window_state != self.windowState():
-                # Recalculate the position when the window state changes (e.g., maximized)
-                self.calculate_position()
-                self.image_label.setGeometry(
-                    self.center_x,
-                    self.top_y,
-                    self.image_label.pixmap().width(),
-                    self.image_label.pixmap().height(),
-                )
+    def update_active_widget(self, active_widget):
+        # Define a list containing all the widgets you want to manage
+        widgets = [
+            self.image_1_widget,
+            self.image_2_widget,
+            self.image_3_widget,
+            self.image_4_widget
+        ]
 
-                # Update the previous window state
-                self.prev_window_state = self.windowState()
+        # Iterate through each widget
+        for widget in widgets:
+            # Check if the current widget is the active_widget
+            widget_active = widget == active_widget
+
+            # Set the stylesheet based on whether the widget is active or not
+            widget.setStyleSheet(
+                "border: 1px solid  rgb(0, 133, 255);" if widget_active else "border: 1px solid rgba(0, 0, 0, 0.20);"
+            )
+
+        # Update the active state variables based on the active_widget
+        self.image_1_widget_active, self.image_2_widget_active, self.image_3_widget_active, self.image_4_widget_active = [
+            widget == active_widget for widget in widgets
+        ]
 
     def browse_image(self):
         if self.images_counter == 4:
@@ -155,14 +135,18 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
         # Store the ImageProcessor instance in the dictionary
         self.images_dict[image_name] = self.image_instance
         self.display_image()
-        # print(image_path)
+
+        # Call plot_FT for each widget and combobox
+        for i in range(1, 4):
+            widget = getattr(self, f"graphicsView_{i}")
+            combobox = getattr(self, f"FT_combo_box_{i}")
+            self.plot_FT(widget, combobox)
 
     def display_image(self):
         min_width, min_height = self.get_min_size()
-        print(min_width, min_height)
 
         for image_index, (image_name, image_instance) in enumerate(
-            self.images_dict.items(), start=1
+                self.images_dict.items(), start=1
         ):
             image_data = image_instance.get_image_data()
 
@@ -192,11 +176,45 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
             # Create a QGraphicsPixmapItem and add it to the scene
             pixmap_item = QGraphicsPixmapItem(pixmap)
             image_scene.addItem(pixmap_item)
-
             # Set the initial view to fit the scene content
             initial_view_rect = QRectF(0, 0, width, height)
             image_widget.setSceneRect(initial_view_rect)
             image_widget.fitInView(initial_view_rect, Qt.KeepAspectRatio)
+
+    def plot_FT(self, widget, combobox):
+        # Get the corresponding image name
+        image_name = f"image_{widget.objectName().split('_')[-1]}"
+
+        # Check if the image exists in the dictionary
+        if image_name in self.images_dict:
+            # Get the Image instance from the dictionary
+            image_instance = self.images_dict[image_name]
+
+            # Get the magnitude spectrum and flatten it
+            magnitude_spectrum = image_instance.get_magnitude_spectrum().flatten()
+
+            # Get the phase spectrum and flatten it
+            phase_spectrum = image_instance.get_phase_spectrum().flatten()
+
+            # Get the real part
+            real_part = image_instance.get_real_part()
+
+            # Get the imaginary part
+            imaginary_part = image_instance.get_imaginary_part()
+
+            # Get the current combobox text
+            combobox_text = combobox.currentText()
+
+            widget.clear()
+            # Plot the Fourier transform
+            if combobox_text == 'FT Magnitude':
+                widget.plot(magnitude_spectrum, pen='r')
+            elif combobox_text == 'FT Phase':
+                widget.plot(phase_spectrum, pen='g')
+            elif combobox_text == 'FT Real':
+                widget.plot(real_part, pen='b')
+            elif combobox_text == 'FT Imaginary':
+                widget.plot(imaginary_part, pen='y')
 
     def create_image_scene(self, image_view):
         image_scene = QGraphicsScene(image_view)
@@ -210,6 +228,20 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
         image_view.setRenderHint(QPainter.HighQualityAntialiasing, True)
         return image_scene
 
+    def delete_image(self, widget):
+        # Get the corresponding image name
+        image_name = f"image_{widget.objectName().split('_')[-1]}"
+
+        # Remove the image from the dictionary
+        if image_name in self.images_dict:
+            del self.images_dict[image_name]
+
+        # Clear the QGraphicsScene of the widget
+        widget.scene().clear()
+
+        # Decrement the images_counter
+        self.images_counter -= 1
+
     def get_min_size(self):
         # Get the minimum width and height of all images in the dictionary
         min_width = min_height = sys.maxsize
@@ -220,34 +252,7 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
             min_height = min(min_height, h)
         return min_width, min_height
 
-    # def delete_image(self):
-    #     # Get the selected image from the combobox
-    #     selected_index = self.comboBox.currentIndex()
-    #     selected_image = (
-    #         f"image_{selected_index + 1}"  # Adding 1 to match the image index
-    #     )
 
-    #     # Delete the selected image from the dictionary
-    #     if selected_image in self.images_dict:
-    #         del self.images_dict[selected_image]
-
-    #     # Remove the selected image from the combobox
-    #     self.comboBox.removeItem(selected_index)
-
-    #     # Construct the attribute name for the image widget
-    #     image_widget_name = (
-    #         f"image_{selected_index + 1}_widget"  # Adding 1 to match the image index
-    #     )
-
-    #     # Check if the attribute exists before trying to clear it
-    #     if hasattr(self, image_widget_name):
-    #         image_widget = getattr(self, image_widget_name)
-
-    #         # Get the scene associated with the QGraphicsView
-    #         scene = image_widget.scene()
-
-    #         # Clear the scene to remove all items
-    #         scene.clear()
 
     # def mix_images(self):
     #     # Implement logic to mix images using the slider value
