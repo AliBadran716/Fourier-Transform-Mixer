@@ -197,10 +197,10 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
             phase_spectrum = image_instance.get_phase_spectrum().flatten()
 
             # Get the real part
-            real_part = image_instance.get_real_part()
+            real_part = image_instance.get_real_part().flatten()
 
             # Get the imaginary part
-            imaginary_part = image_instance.get_imaginary_part()
+            imaginary_part = image_instance.get_imaginary_part().flatten()
 
             # Get the current combobox text
             combobox_text = combobox.currentText()
@@ -209,12 +209,22 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
             # Plot the Fourier transform
             if combobox_text == 'FT Magnitude':
                 widget.plot(magnitude_spectrum, pen='r')
+                Y_min, Y_max = min(magnitude_spectrum), max(magnitude_spectrum)
             elif combobox_text == 'FT Phase':
                 widget.plot(phase_spectrum, pen='g')
+                Y_min, Y_max = min(phase_spectrum), max(phase_spectrum)
             elif combobox_text == 'FT Real':
                 widget.plot(real_part, pen='b')
+                Y_min, Y_max = min(real_part), max(real_part)
             elif combobox_text == 'FT Imaginary':
                 widget.plot(imaginary_part, pen='y')
+                Y_min, Y_max = min(imaginary_part), max(imaginary_part)
+
+            # Set the y range to fit the data
+            widget.getViewBox().setYRange(Y_min, Y_max)
+
+            # Set the x range to a specific range
+            widget.getViewBox().setXRange(0, 100)
 
     def create_image_scene(self, image_view):
         image_scene = QGraphicsScene(image_view)
