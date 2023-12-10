@@ -53,11 +53,14 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
         self.setupUi(self)
         self.images_dict = {}  # A dictionary to store Image instances
         self.images_counter = 0  # A counter to keep track of the number of images
+        self.active_widget = None  # A variable to store the active widget
+        self.active_widget_name = None  # A variable to store the active widget name
         # Store the initial window state
         self.image_1_widget_active = True
         self.image_2_widget_active = False
         self.image_3_widget_active = False
         self.image_4_widget_active = False
+
         # Set up the QGraphicsScene for the view
         scene = QGraphicsScene()
         self.setScene(scene)
@@ -83,8 +86,6 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
             widget = getattr(self, f"graphicsView_{i}")
             combobox.currentIndexChanged.connect(functools.partial(self.plot_FT, widget, combobox))
 
-
-
     def setScene(self, scene):
         self.image_1_widget.setScene(scene)
         self.image_2_widget.setScene(scene)
@@ -92,11 +93,15 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
         self.image_4_widget.setScene(scene)
 
     def on_mouse_click(self, event, widget):
+        #self.active_widget = widget
+        self.active_widget_name = widget.objectName()
         if event.button() == pg.QtCore.Qt.LeftButton:
             self.update_active_widget(widget)
-            self.browse_image()
+            self.browse_image(widget)
         if event.button() == pg.QtCore.Qt.RightButton:
             self.delete_image(widget)
+       
+        
 
     def update_active_widget(self, active_widget):
         # Define a list containing all the widgets you want to manage
@@ -122,7 +127,7 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
             widget == active_widget for widget in widgets
         ]
 
-    def browse_image(self):
+    def browse_image(self, widget):
         if self.images_counter == 4:
             return
         self.images_counter += 1
@@ -130,10 +135,10 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
         image_path, _ = QFileDialog.getOpenFileName(
             self, "Open Image", "", "Image Files (*.jpg *.gif *.png *.jpeg *.svg)"
         )
-        self.image_instance = Image(str(image_path))
-        image_name = f"image_{self.images_counter}"
+        image_instance = Image(str(image_path))
+        # image_name = f"image_{self.images_counter}"
         # Store the ImageProcessor instance in the dictionary
-        self.images_dict[image_name] = self.image_instance
+        self.images_dict[self.active_widget_name] = [image_instance, widget]
         self.display_image()
 
         # Call plot_FT for each widget and combobox
@@ -142,14 +147,12 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
             combobox = getattr(self, f"FT_combo_box_{i}")
             self.plot_FT(widget, combobox)
 
+
     def display_image(self):
         min_width, min_height = self.get_min_size()
 
-        for image_index, (image_name, image_instance) in enumerate(
-                self.images_dict.items(), start=1
-        ):
-            image_data = image_instance.get_image_data()
-
+        for widget_name, image_list in self.images_dict.items():
+            image_data = image_list[0].get_image_data()
             # Resize the image while maintaining the aspect ratio
             resized_image = cv2.resize(image_data, (min_width, min_height))
             height, width = resized_image.shape
@@ -164,11 +167,9 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
             )
             pixmap = QPixmap.fromImage(q_image)
 
-            # Get the corresponding image widget
-            image_widget = getattr(self, f"image_{image_index}_widget")
-
             # Create the QGraphicsScene and set it for the respective image widget
-            image_scene = self.create_image_scene(image_widget)
+            image_scene = self.create_image_scene(image_list[1])
+
 
             # Clear the scene before adding a new item
             image_scene.clear()
@@ -178,8 +179,8 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
             image_scene.addItem(pixmap_item)
             # Set the initial view to fit the scene content
             initial_view_rect = QRectF(0, 0, width, height)
-            image_widget.setSceneRect(initial_view_rect)
-            image_widget.fitInView(initial_view_rect, Qt.KeepAspectRatio)
+            widget_name.setSceneRect(initial_view_rect)
+            widget_name.fitInView(initial_view_rect, Qt.KeepAspectRatio)
 
     def plot_FT(self, widget, combobox):
         # Get the corresponding image name
@@ -227,6 +228,7 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
             widget.getViewBox().setXRange(0, 100)
 
     def create_image_scene(self, image_view):
+        print(image_view)   
         image_scene = QGraphicsScene(image_view)
         image_view.setScene(image_scene)
         # Set size policy and other properties as needed
@@ -255,8 +257,8 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
     def get_min_size(self):
         # Get the minimum width and height of all images in the dictionary
         min_width = min_height = sys.maxsize
-        for image_name, image_instance in self.images_dict.items():
-            image_data = image_instance.get_image_data()
+        for widget_name, image_list in self.images_dict.items():
+            image_data = image_list[0].get_image_data()
             h, w = image_data.shape
             min_width = min(min_width, w)
             min_height = min(min_height, h)
