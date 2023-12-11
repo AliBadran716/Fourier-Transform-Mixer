@@ -10,7 +10,6 @@ import cv2
 import numpy as np
 import pandas as pd
 
-from image import Image
 
 import os
 import sys
@@ -28,6 +27,7 @@ from PyQt5.QtGui import QImage, QPixmap
 import sys
 import functools
 from image import Image
+from imageMixer import ImageMixer
 from PyQt5.QtWidgets import QGraphicsScene
 from PyQt5.QtWidgets import QGraphicsPixmapItem
 from PyQt5.QtCore import QRectF
@@ -72,13 +72,14 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
                                   ],
         }  # A dictionary to store Image instances
         self.images_counter = 0  # A counter to keep track of the number of images
+        self.mixing_ratios = []
         self.active_widget = None  # A variable to store the active widget
         self.active_widget_name = None  # A variable to store the active widget name
         # Store the initial window state
-        self.image_1_widget_active = True
-        self.image_2_widget_active = False
-        self.image_3_widget_active = False
-        self.image_4_widget_active = False
+        # self.image_1_widget_active = True
+        # self.image_2_widget_active = False
+        # self.image_3_widget_active = False
+        # self.image_4_widget_active = False
 
         self.image_widget_list = [
             self.image_1_widget,

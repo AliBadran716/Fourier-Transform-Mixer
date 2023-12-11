@@ -16,7 +16,6 @@ class Image:
         self.real_part = np.real(self.fourier_transform)
         self.imaginary_part = np.imag(self.fourier_transform)
 
-
     def get_sampling_frequencies(self):
         return self.sampling_frequency_x, self.sampling_frequency_y
     
