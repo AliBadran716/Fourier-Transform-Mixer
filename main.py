@@ -163,16 +163,17 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
             self, "Open Image", "", "Image Files (*.jpg *.gif *.png *.jpeg *.svg)"
         )
         image_instance = Image(str(image_path))
-        # image_name = f"image_{self.images_counter}"
-        # Store the ImageProcessor instance in the dictionary
-        self.images_dict[self.active_widget_name] = [image_instance, widget]
+        # Update the third element of the list associated with self.active_widget
+        self.images_dict[self.active_widget][2] = image_instance
         self.display_image()
 
     def display_image(self):
         min_width, min_height = self.get_min_size()
 
-        for widget_name, image_list in self.images_dict.items():
-            image_data = image_list[0].get_image_data()
+        for widget_name, value in self.images_dict.items():
+            if value[2] is None:
+                continue
+            image_data = value[2].get_image_data()
             # Resize the image while maintaining the aspect ratio
             resized_image = cv2.resize(image_data, (min_width, min_height))
             height, width = resized_image.shape
@@ -188,7 +189,7 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
             pixmap = QPixmap.fromImage(q_image)
 
             # Create the QGraphicsScene and set it for the respective image widget
-            image_scene = self.create_image_scene(image_list[1])
+            image_scene = self.create_image_scene(widget_name)
 
             # Clear the scene before adding a new item
             image_scene.clear()
@@ -199,13 +200,13 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
 
             # Set the initial view to fit the scene content
             initial_view_rect = QRectF(0, 0, width, height)
-            image_list[1].setSceneRect(initial_view_rect)
+            widget_name.setSceneRect(initial_view_rect)
 
             # Fit the view to the pixmap item's bounding rectangle
-            image_list[1].fitInView(pixmap_item.boundingRect(), Qt.KeepAspectRatio)
+            widget_name.fitInView(pixmap_item.boundingRect(), Qt.KeepAspectRatio)
 
             # Set the margins to zero
-            image_list[1].setContentsMargins(0, 0, 0, 0)
+            widget_name.setContentsMargins(0, 0, 0, 0)
 
     def create_image_scene(self, image_view):
         # Create the QGraphicsScene and set it for the respective image widget
@@ -255,23 +256,25 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
         # Get the maximum imaginary part
         max_imaginary_part = image_instance.get_max_imaginary_part(imaginary_part)
 
-
     def delete_image(self, widget):
-        # Remove the image from the dictionary
-        if self.active_widget_name in self.images_dict:
-            del self.images_dict[self.active_widget_name]
+        # Check if the key is in the dictionary
+        if widget in self.images_dict:
+            # Set the third element of the list associated with the key to None
+            self.images_dict[widget][2] = None
 
-        # Clear the QGraphicsScene of the widget
-        widget.scene().clear()
+            # Clear the QGraphicsScene of the widget
+            widget.scene().clear()
 
-        # Decrement the images_counter
-        self.images_counter -= 1
+            # Decrement the images_counter
+            self.images_counter -= 1
 
     def get_min_size(self):
         # Get the minimum width and height of all images in the dictionary
         min_width = min_height = sys.maxsize
-        for widget_name, image_list in self.images_dict.items():
-            image_data = image_list[0].get_image_data()
+        for widget_name, value in self.images_dict.items():
+            if value[2] is None:
+                continue
+            image_data = value[2].get_image_data()
             h, w = image_data.shape
             min_width = min(min_width, w)
             min_height = min(min_height, h)
