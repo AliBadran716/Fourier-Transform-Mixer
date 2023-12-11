@@ -33,6 +33,8 @@ from PyQt5.QtWidgets import QGraphicsPixmapItem
 from PyQt5.QtCore import QRectF
 from PyQt5.QtWidgets import QSizePolicy
 from PyQt5.QtGui import QPainter
+from PyQt5.QtGui import QPixmap, QImage
+from pyqtgraph import ImageItem
 
 FORM_CLASS, _ = loadUiType(
     path.join(path.dirname(__file__), "main.ui")
@@ -51,7 +53,24 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
         """
         super(MainApp, self).__init__(parent)
         self.setupUi(self)
-        self.images_dict = {}  # A dictionary to store Image instances
+        self.images_dict = {
+            self.image_1_widget: [self.graphicsView_1,  # FT plot widget
+                                  self.image_1_widget.objectName(),  # widget name
+                                  None  # image instance
+                                  ],
+            self.image_2_widget: [self.graphicsView_2,  # FT plot widget
+                                  self.image_2_widget.objectName(),  # widget name
+                                  None  # image instance
+                                  ],
+            self.image_3_widget: [self.graphicsView_3,  # FT plot widget
+                                  self.image_3_widget.objectName(),  # widget name
+                                  None  # image instance
+                                  ],
+            self.image_4_widget: [self.graphicsView_4,  # FT plot widget
+                                  self.image_4_widget.objectName(),  # widget name
+                                  None  # image instance
+                                  ],
+        }  # A dictionary to store Image instances
         self.images_counter = 0  # A counter to keep track of the number of images
         self.active_widget = None  # A variable to store the active widget
         self.active_widget_name = None  # A variable to store the active widget name
@@ -61,6 +80,20 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
         self.image_3_widget_active = False
         self.image_4_widget_active = False
 
+        self.image_widget_list = [
+            self.image_1_widget,
+            self.image_2_widget,
+            self.image_3_widget,
+            self.image_4_widget
+        ]
+
+        self.FT_widget_list = [
+            self.graphicsView_1,
+            self.graphicsView_2,
+            self.graphicsView_3,
+            self.graphicsView_4
+        ]
+
         # Set up the QGraphicsScene for the view
         scene = QGraphicsScene()
         self.setScene(scene)
@@ -68,32 +101,26 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
         self.handle_button()
 
     def handle_button(self):
-        self.browsing_pushButton.clicked.connect(self.browse_image)
-        # List of widgets to handle
-        widgets_to_handle = [
-            self.image_1_widget,
-            self.image_2_widget,
-            self.image_3_widget,
-            self.image_4_widget
-        ]
         # Connect mouseDoubleClickEvent for each widget
-        for widget in widgets_to_handle:
+        for widget in self.images_dict.keys():
             widget.mouseDoubleClickEvent = lambda event, w=widget: self.on_mouse_click(event, w)
 
             # Connect currentIndexChanged for each QComboBox using a loop
-        for i in range(1, 4):
-            combobox = getattr(self, f"FT_combo_box_{i}")
-            widget = getattr(self, f"graphicsView_{i}")
-            combobox.currentIndexChanged.connect(functools.partial(self.plot_FT, widget, combobox))
+        for i, (key, values) in enumerate(self.images_dict.items()):
+            combobox = getattr(self, f"FT_combo_box_{i+1}")
+            combobox.currentIndexChanged.connect(functools.partial(self.plot_FT, values[0], combobox))
 
     def setScene(self, scene):
-        self.image_1_widget.setScene(scene)
-        self.image_2_widget.setScene(scene)
-        self.image_3_widget.setScene(scene)
-        self.image_4_widget.setScene(scene)
+        for widget in self.images_dict.keys():
+            widget.setScene(scene)
+
+        for widget in self.FT_widget_list:
+            widget.setScene(scene)
+
+
 
     def on_mouse_click(self, event, widget):
-        #self.active_widget = widget
+        self.active_widget = widget
         self.active_widget_name = widget.objectName()
         if event.button() == pg.QtCore.Qt.LeftButton:
             self.update_active_widget(widget)
@@ -141,13 +168,6 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
         self.images_dict[self.active_widget_name] = [image_instance, widget]
         self.display_image()
 
-        # Call plot_FT for each widget and combobox
-        for i in range(1, 4):
-            widget = getattr(self, f"graphicsView_{i}")
-            combobox = getattr(self, f"FT_combo_box_{i}")
-            self.plot_FT(widget, combobox)
-
-
     def display_image(self):
         min_width, min_height = self.get_min_size()
 
@@ -170,65 +190,25 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
             # Create the QGraphicsScene and set it for the respective image widget
             image_scene = self.create_image_scene(image_list[1])
 
-
             # Clear the scene before adding a new item
             image_scene.clear()
 
             # Create a QGraphicsPixmapItem and add it to the scene
             pixmap_item = QGraphicsPixmapItem(pixmap)
             image_scene.addItem(pixmap_item)
+
             # Set the initial view to fit the scene content
             initial_view_rect = QRectF(0, 0, width, height)
             image_list[1].setSceneRect(initial_view_rect)
-            image_list[1].fitInView(initial_view_rect, Qt.KeepAspectRatio)
 
-    def plot_FT(self, widget, combobox):
-        # Get the corresponding image name
-        image_name = f"image_{widget.objectName().split('_')[-1]}"
+            # Fit the view to the pixmap item's bounding rectangle
+            image_list[1].fitInView(pixmap_item.boundingRect(), Qt.KeepAspectRatio)
 
-        # Check if the image exists in the dictionary
-        if image_name in self.images_dict:
-            # Get the Image instance from the dictionary
-            image_instance = self.images_dict[image_name]
-
-            # Get the magnitude spectrum and flatten it
-            magnitude_spectrum = image_instance.get_magnitude_spectrum().flatten()
-
-            # Get the phase spectrum and flatten it
-            phase_spectrum = image_instance.get_phase_spectrum().flatten()
-
-            # Get the real part
-            real_part = image_instance.get_real_part().flatten()
-
-            # Get the imaginary part
-            imaginary_part = image_instance.get_imaginary_part().flatten()
-
-            # Get the current combobox text
-            combobox_text = combobox.currentText()
-
-            widget.clear()
-            # Plot the Fourier transform
-            if combobox_text == 'FT Magnitude':
-                widget.plot(magnitude_spectrum, pen='r')
-                Y_min, Y_max = min(magnitude_spectrum), max(magnitude_spectrum)
-            elif combobox_text == 'FT Phase':
-                widget.plot(phase_spectrum, pen='g')
-                Y_min, Y_max = min(phase_spectrum), max(phase_spectrum)
-            elif combobox_text == 'FT Real':
-                widget.plot(real_part, pen='b')
-                Y_min, Y_max = min(real_part), max(real_part)
-            elif combobox_text == 'FT Imaginary':
-                widget.plot(imaginary_part, pen='y')
-                Y_min, Y_max = min(imaginary_part), max(imaginary_part)
-
-            # Set the y range to fit the data
-            widget.getViewBox().setYRange(Y_min, Y_max)
-
-            # Set the x range to a specific range
-            widget.getViewBox().setXRange(0, 100)
+            # Set the margins to zero
+            image_list[1].setContentsMargins(0, 0, 0, 0)
 
     def create_image_scene(self, image_view):
-        print(image_view)   
+        # Create the QGraphicsScene and set it for the respective image widget
         image_scene = QGraphicsScene(image_view)
         image_view.setScene(image_scene)
         # Set size policy and other properties as needed
@@ -239,6 +219,42 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
         image_view.setRenderHint(QPainter.SmoothPixmapTransform, True)
         image_view.setRenderHint(QPainter.HighQualityAntialiasing, True)
         return image_scene
+
+    def plot_FT(self, widget, combobox):
+        # Get the current text of the combobox
+        current_text = combobox.currentText()
+
+        # Get the image instance from the dictionary
+        image_instance = self.images_dict[self.active_widget_name][0]
+        # Get the image data
+        image_data = image_instance.get_image_data()
+        # Compute the Fourier transform
+        fourier_transform = image_instance.get_fourier_transform()
+        # Compute the magnitude spectrum
+        magnitude_spectrum = image_instance.get_magnitude_spectrum()
+        # Compute the phase spectrum
+        phase_spectrum = image_instance.get_phase_spectrum()
+        # Compute the real part
+        real_part = image_instance.get_real_part()
+        # Compute the imaginary part
+        imaginary_part = image_instance.get_imaginary_part()
+        # Get the sampling frequencies
+        sampling_frequency_x, sampling_frequency_y = image_instance.get_sampling_frequencies()
+        # Get the image dimensions
+        image_height, image_width = image_data.shape
+        # Get the maximum amplitude
+        max_amplitude = image_instance.get_max_amplitude(image_data)
+        # Get the maximum frequency
+        max_frequency = image_instance.get_max_frequency(image_data, sampling_frequency_x)
+        # Get the maximum magnitude
+        max_magnitude = image_instance.get_max_magnitude(magnitude_spectrum)
+        # Get the maximum phase
+        max_phase = image_instance.get_max_phase(phase_spectrum)
+        # Get the maximum real part
+        max_real_part = image_instance.get_max_real_part(real_part)
+        # Get the maximum imaginary part
+        max_imaginary_part = image_instance.get_max_imaginary_part(imaginary_part)
+
 
     def delete_image(self, widget):
         # Remove the image from the dictionary
