@@ -179,8 +179,8 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
             image_scene.addItem(pixmap_item)
             # Set the initial view to fit the scene content
             initial_view_rect = QRectF(0, 0, width, height)
-            widget_name.setSceneRect(initial_view_rect)
-            widget_name.fitInView(initial_view_rect, Qt.KeepAspectRatio)
+            image_list[1].setSceneRect(initial_view_rect)
+            image_list[1].fitInView(initial_view_rect, Qt.KeepAspectRatio)
 
     def plot_FT(self, widget, combobox):
         # Get the corresponding image name
@@ -241,12 +241,9 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
         return image_scene
 
     def delete_image(self, widget):
-        # Get the corresponding image name
-        image_name = f"image_{widget.objectName().split('_')[-1]}"
-
         # Remove the image from the dictionary
-        if image_name in self.images_dict:
-            del self.images_dict[image_name]
+        if self.active_widget_name in self.images_dict:
+            del self.images_dict[self.active_widget_name]
 
         # Clear the QGraphicsScene of the widget
         widget.scene().clear()
