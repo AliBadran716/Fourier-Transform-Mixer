@@ -7,14 +7,22 @@
     <x>0</x>
     <y>0</y>
     <width>1379</width>
-    <height>1199</height>
+    <height>748</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <widget class="QWidget" name="">
+   <widget class="QWidget" name="layoutWidget">
+    <property name="geometry">
+     <rect>
+      <x>0</x>
+      <y>0</y>
+      <width>354</width>
+      <height>128</height>
+     </rect>
+    </property>
     <layout class="QHBoxLayout" name="horizontalLayout_17">
      <item>
       <widget class="QPushButton" name="browsing_pushButton">
@@ -130,7 +138,15 @@
      </item>
     </layout>
    </widget>
-   <widget class="QWidget" name="">
+   <widget class="QWidget" name="layoutWidget">
+    <property name="geometry">
+     <rect>
+      <x>0</x>
+      <y>0</y>
+      <width>886</width>
+      <height>1060</height>
+     </rect>
+    </property>
     <layout class="QHBoxLayout" name="horizontalLayout_18">
      <item>
       <layout class="QVBoxLayout" name="verticalLayout_5">
@@ -634,7 +650,7 @@
      </item>
     </layout>
    </widget>
-   <widget class="QWidget" name="">
+   <widget class="QWidget" name="layoutWidget">
     <property name="geometry">
      <rect>
       <x>697</x>
@@ -673,7 +689,7 @@
       </widget>
      </item>
      <item row="1" column="1">
-      <widget class="QSlider" name="verticalSlider">
+      <widget class="QSlider" name="slider_1">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
          <horstretch>0</horstretch>
@@ -689,21 +705,21 @@
       </widget>
      </item>
      <item row="1" column="2">
-      <widget class="QSlider" name="verticalSlider_2">
+      <widget class="QSlider" name="slider_2">
        <property name="orientation">
         <enum>Qt::Vertical</enum>
        </property>
       </widget>
      </item>
      <item row="1" column="3">
-      <widget class="QSlider" name="verticalSlider_3">
+      <widget class="QSlider" name="slider_3">
        <property name="orientation">
         <enum>Qt::Vertical</enum>
        </property>
       </widget>
      </item>
      <item row="1" column="4">
-      <widget class="QSlider" name="verticalSlider_4">
+      <widget class="QSlider" name="slider_4">
        <property name="orientation">
         <enum>Qt::Vertical</enum>
        </property>
