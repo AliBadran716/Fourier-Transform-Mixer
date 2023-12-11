@@ -36,6 +36,13 @@ class Image:
     
     def get_image_data(self):
         return self.image_data
+    
+    def set_image_size(self, width, height):   
+        self.image_data = cv2.resize(self.image_data, (width, height))
+        self.compute_fourier_transform()
+
+    def get_image_size(self):
+        return self.image_data.shape 
 
     def apply_mixer(self, images_list, mix_ratio):
         # Mix the amplitudes and phases of the images

@@ -102,6 +102,8 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
         self.handle_button()
 
     def handle_button(self):
+        # Connect the clicked signal to the browse_image method
+        self.mix_button.clicked.connect(self.mix_images)
         # Connect mouseDoubleClickEvent for each widget
         for widget in self.images_dict.keys():
             widget.mouseDoubleClickEvent = lambda event, w=widget: self.on_mouse_click(event, w)
@@ -281,7 +283,56 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
             min_height = min(min_height, h)
         return min_width, min_height
 
+    def mix_images(self):
+        '''Mix images using the slider value'''
+        # Implement logic to mix images using the slider value
+        if self.images_dict:
+            min_width, min_height = self.get_min_size()
+            images_lists = []
+            
+            for image_list in self.images_dict.values():
+                
+                if image_list[2] is None:
+                    continue
+                else:
+                    image_list[2].set_image_size(min_width, min_height)
+                    print(f"image after resize{image_list[2].get_image_size()}")
+                    images_lists.append(image_list[2])
+                
+            mix =  ImageMixer(images_lists)
+            slider_values = self.get_slider_values()
+            
+            
+            output_image = mix.mix_images(slider_values, min_width, min_height)
+            # Create a QImage from the output_image
+            bytes_per_line = min_width
+            image_data = bytes(output_image.data)
 
+            # Now create the QImage object
+            q_image = QImage(image_data, min_width, min_height, bytes_per_line, QImage.Format_Grayscale8)
+            pixmap = QPixmap.fromImage(q_image)
+            image_scene = self.create_image_scene(self.output_image_1)
+            
+            # Clear the scene before adding a new item
+            image_scene.clear()
+            pixmap_item = QGraphicsPixmapItem(pixmap)
+            image_scene.addItem(pixmap_item)
+            initial_view_rect = QRectF(0, 0, min_width, min_height)
+            self.output_image_1.setSceneRect(initial_view_rect)
+            self.output_image_1.fitInView(initial_view_rect, Qt.KeepAspectRatio)
+    def get_slider_values(self):
+        '''Get the slider values and normalize them'''
+        # Get the slider values
+        slider_values = [
+            self.slider_1.value(),
+            self.slider_2.value(),
+            self.slider_3.value(),
+            self.slider_4.value(),
+        ]
+        # Normalize the slider values
+        summation = sum(slider_values)
+        normalized_slider_values = [value / summation for value in slider_values]
+        return normalized_slider_values
 
     # def mix_images(self):
     #     # Implement logic to mix images using the slider value
