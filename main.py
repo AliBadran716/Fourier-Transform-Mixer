@@ -98,30 +98,35 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
         # Connect the mouse press event to the handle_buttons method
         self.handle_button()
 
-    def mouse_press_event(self, event):
+    def mouse_press_event(self, event, w):
+        self.rubber_band = QRubberBand(QRubberBand.Rectangle, w)
         self.origin = event.pos()
         self.rubber_band.setGeometry(QRect(self.origin, event.pos()).normalized())
         self.rubber_band.show()
 
-    def mouse_move_event(self, event):
+    def mouse_move_event(self, event, w):
         if self.rubber_band.isVisible():
             self.rubber_band.setGeometry(QRect(self.origin, event.pos()).normalized())
 
-    def mouse_release_event(self, event):
+    def mouse_release_event(self, event, w):
         if self.rubber_band.isVisible():
             selected_region = self.rubber_band.geometry()
             # Do something with the selected region
             self.rubber_band.hide()
+            # Get the dictionary key associated with the widget
+            desired_key = next((key for key, value in self.images_dict.items() if value[0] == w and value[2]), None)
+            region_selected = self.images_dict[desired_key][2].get_selected_region(selected_region, self.images_dict[desired_key][2].get_magnitude_spectrum())
+            
 
     def handle_button(self):
         # Connect the clicked signal to the browse_image method
         self.mix_button.clicked.connect(self.mix_images)
         # Connect mouseDoubleClickEvent for each widget
-        for widget in self.images_dict.keys():
+        for widget, value in self.images_dict.items():
             widget.mouseDoubleClickEvent = lambda event, w=widget: self.on_mouse_click(event, w)
-            widget.mousePressEvent = self.mouse_press_event
-            widget.mouseMoveEvent = self.mouse_move_event
-            widget.mouseReleaseEvent = self.mouse_release_event
+            value[0].mousePressEvent = lambda event, w=value[0]: self.mouse_press_event(event, w)
+            value[0].mouseMoveEvent = lambda event, w=value[0]: self.mouse_move_event(event, w)
+            value[0].mouseReleaseEvent = lambda event, w=value[0]: self.mouse_release_event(event, w)
 
             # Connect currentIndexChanged for each QComboBox using a loop
         for key, values in self.images_dict.items():
@@ -131,9 +136,11 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
         # Set the scene for each widget
         for key, value in self.images_dict.items():
             key.setScene(scene)
+            value[0].setScene(scene)
 
     def setupImagesView(self):
         for widget_name, value in self.images_dict.items():
+            break
             value[0].ui.histogram.hide()
             value[0].ui.roiBtn.hide()
             value[0].ui.menuBtn.hide()
@@ -149,8 +156,6 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
             self.browse_image(widget)
         if event.button() == pg.QtCore.Qt.RightButton:
             self.delete_image(widget)
-        self.rubber_band = QRubberBand(QRubberBand.Rectangle, self.active_widget)
-       
         
 
     def update_active_widget(self, active_widget):
@@ -280,18 +285,40 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
 
         if current_text == "FT Magnitude":
             # Plot the magnitude spectrum
-            self.plot_image_view(magnitude_spectrum, widget)
+            # self.plot_image_view(magnitude_spectrum, widget)
+            # get height and width of the image
+            height, width = magnitude_spectrum.shape
 
+            image_data = bytes(magnitude_spectrum.data)
+            # plot image
+            self.plot_images(width, height, widget, image_data)
         elif current_text == "FT Phase":
             # Plot the phase spectrum
-            self.plot_image_view(phase_spectrum, widget)
+            # self.plot_image_view(phase_spectrum, widget)
+            height, width = phase_spectrum.shape
+
+            image_data = bytes(phase_spectrum.data)
+            # plot image
+            self.plot_images(width, height, widget, image_data)
         elif current_text == "FT Real":
             # Plot the real part
-            self.plot_image_view(real_part, widget)
+            # self.plot_image_view(real_part, widget)
+            # get height and width of the image
+            height, width = real_part.shape
+
+            image_data = bytes(real_part.data)
+            # plot image
+            self.plot_images(width, height, widget, image_data)
         elif current_text == "FT Imaginary":
             # Plot the imaginary part
-            self.plot_image_view(imaginary_part, widget)
+            # self.plot_image_view(imaginary_part, widget)
 
+            # get height and width of the image
+            height, width = imaginary_part.shape
+
+            image_data = bytes(imaginary_part.data)
+            # plot image
+            self.plot_images(width, height, widget, image_data)
     def plot_image_view(self, image_data, widget):
 
         widget.ui.roiPlot.hide()
