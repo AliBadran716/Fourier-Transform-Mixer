@@ -51,6 +51,7 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
         Parameters:
         - parent: The parent widget, which is typically None for the main window.
         """
+        
         super(MainApp, self).__init__(parent)
         self.setupUi(self)
         self.images_dict = { # A dictionary to store Image instances and their associated widgets
@@ -94,7 +95,7 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
         self.contrast = 0
 
         self.initial_mouse_pos = QPoint(0, 0)
-
+        self.progressBar.setValue(0)
         # Set up the QGraphicsScene for the view
         scene = QGraphicsScene()
         self.setScene(scene)
