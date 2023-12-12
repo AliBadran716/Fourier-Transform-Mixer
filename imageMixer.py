@@ -5,10 +5,6 @@ class ImageMixer:
         self.images_list = images_list
 
     def mix_images(self, mix_ratios ,min_width, min_height , mode):
-        # Validate the mix_ratios
-        # if len(mix_ratios) != len(self.images_list):
-        #     raise ValueError("The number of mix ratios should be equal to the number of images.")
-
         # Initialize variables for the mixed amplitude and phase
         mixed_amplitudes = np.zeros_like(self.images_list[0].get_magnitude_spectrum()).astype(np.float64)
         mixed_phases = np.zeros_like(self.images_list[0].get_phase_spectrum()).astype(np.float64)

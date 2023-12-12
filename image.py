@@ -54,13 +54,3 @@ class Image:
     def get_image_size(self):
         return self.image_data.shape 
 
-    def apply_mixer(self, images_list, mix_ratio):
-        # Mix the amplitudes and phases of the images
-        mixed_amplitudes = mix_ratio * self.amplitudes + (1 - mix_ratio) * images_list.amplitudes
-        mixed_phases = mix_ratio * self.phases + (1 - mix_ratio) * images_list.phases
-
-        # Reconstruct the mixed image using the inverse Fourier transform
-        mixed_transform = mixed_amplitudes * np.exp(1j * mixed_phases)
-        mixed_image_data = np.fft.ifft2(mixed_transform).real
-
-        return mixed_image_data

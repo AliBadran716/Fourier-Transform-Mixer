@@ -304,13 +304,6 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
         # Set the margins to zero
         widget_name.setContentsMargins(0, 0, 0, 0)
 
-
-
-
-
-
-
-
     def create_image_scene(self, image_view):
         # Create the QGraphicsScene and set it for the respective image widget
         image_scene = QGraphicsScene(image_view)
@@ -388,7 +381,7 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
             image_data = bytes(imaginary_part.data)
             # plot image
             self.plot_images(width, height, widget, image_data, True)
-            
+
     def plot_image_view(self, image_data, widget):
 
         widget.ui.roiPlot.hide()
