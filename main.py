@@ -81,6 +81,11 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
         # self.image_3_widget_active = False
         # self.image_4_widget_active = False
 
+        self.output_dictionary ={
+            "Viewport 1": self.output_image_1,
+            "Viewport 2": self.output_image_2,
+        }
+
         self.image_widget_list = [
             self.image_1_widget,
             self.image_2_widget,
@@ -180,10 +185,14 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
             # Resize the image while maintaining the aspect ratio
             resized_image = cv2.resize(image_data, (min_width, min_height))
             height, width = resized_image.shape
+            image_data = bytes(resized_image.data)
+            self.plot_images(width, height, widget_name, image_data)
+      
+    def plot_images(self , width , height , widget_name , image_data):
             bytes_per_line = width
 
             q_image = QImage(
-                resized_image.data,
+                image_data,
                 width,
                 height,
                 bytes_per_line,
@@ -307,19 +316,9 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
             # Create a QImage from the output_image
             bytes_per_line = min_width
             image_data = bytes(output_image.data)
-
-            # Now create the QImage object
-            q_image = QImage(image_data, min_width, min_height, bytes_per_line, QImage.Format_Grayscale8)
-            pixmap = QPixmap.fromImage(q_image)
-            image_scene = self.create_image_scene(self.output_image_1)
+            current_view = self.comboBox_2.currentText()
+            self.plot_images(min_width, min_height,self.output_dictionary[current_view] , image_data)
             
-            # Clear the scene before adding a new item
-            image_scene.clear()
-            pixmap_item = QGraphicsPixmapItem(pixmap)
-            image_scene.addItem(pixmap_item)
-            initial_view_rect = QRectF(0, 0, min_width, min_height)
-            self.output_image_1.setSceneRect(initial_view_rect)
-            self.output_image_1.fitInView(initial_view_rect, Qt.KeepAspectRatio)
     def get_slider_values(self):
         '''Get the slider values and normalize them'''
         # Get the slider values
