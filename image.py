@@ -9,6 +9,16 @@ class Image:
         self.sampling_frequency_y = 1.0 / self.image_data.shape[0]
         self.compute_fourier_transform()
 
+    def get_selected_region(self, selected_region):
+        # Extract the selected region from the image_data
+        x = int(selected_region.topLeft().x())
+        y = int(selected_region.topLeft().y())
+        width = int(selected_region.width())
+        height = int(selected_region.height())
+
+        selected_region_data = self.image_data[y:y + height, x:x + width]
+        return selected_region_data
+
     def compute_fourier_transform(self):
         self.fourier_transform = np.fft.fft2(self.image_data)
         self.magnitude_spectrum = np.abs(self.fourier_transform)

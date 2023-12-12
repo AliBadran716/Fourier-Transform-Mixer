@@ -35,6 +35,8 @@ from PyQt5.QtWidgets import QSizePolicy
 from PyQt5.QtGui import QPainter
 from PyQt5.QtGui import QPixmap, QImage
 from pyqtgraph import ImageItem
+from PyQt5.QtWidgets import QRubberBand, QGraphicsScene, QGraphicsPixmapItem
+from PyQt5.QtCore import Qt, QRectF, QSizeF
 
 FORM_CLASS, _ = loadUiType(
     path.join(path.dirname(__file__), "main.ui")
@@ -42,9 +44,7 @@ FORM_CLASS, _ = loadUiType(
 
 
 class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_class file
-    def __init__(
-        self, parent=None
-    ):  # constructor to initiate the main window  in the design
+    def __init__(self, parent=None):  # constructor to initiate the main window  in the design
         """
         Constructor to initiate the main window in the design.
 
@@ -98,12 +98,30 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
         # Connect the mouse press event to the handle_buttons method
         self.handle_button()
 
+    def mouse_press_event(self, event):
+        self.origin = event.pos()
+        self.rubber_band.setGeometry(QRect(self.origin, event.pos()).normalized())
+        self.rubber_band.show()
+
+    def mouse_move_event(self, event):
+        if self.rubber_band.isVisible():
+            self.rubber_band.setGeometry(QRect(self.origin, event.pos()).normalized())
+
+    def mouse_release_event(self, event):
+        if self.rubber_band.isVisible():
+            selected_region = self.rubber_band.geometry()
+            # Do something with the selected region
+            self.rubber_band.hide()
+
     def handle_button(self):
         # Connect the clicked signal to the browse_image method
         self.mix_button.clicked.connect(self.mix_images)
         # Connect mouseDoubleClickEvent for each widget
         for widget in self.images_dict.keys():
             widget.mouseDoubleClickEvent = lambda event, w=widget: self.on_mouse_click(event, w)
+            widget.mousePressEvent = self.mouse_press_event
+            widget.mouseMoveEvent = self.mouse_move_event
+            widget.mouseReleaseEvent = self.mouse_release_event
 
             # Connect currentIndexChanged for each QComboBox using a loop
         for key, values in self.images_dict.items():
@@ -131,6 +149,7 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
             self.browse_image(widget)
         if event.button() == pg.QtCore.Qt.RightButton:
             self.delete_image(widget)
+        self.rubber_band = QRubberBand(QRubberBand.Rectangle, self.active_widget)
        
         
 
