@@ -257,7 +257,7 @@ QComboBox:on { /* shift the text when the popup opens */
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout">
-    <item row="0" column="0">
+    <item row="1" column="0">
      <layout class="QHBoxLayout" name="horizontalLayout_9">
       <item>
        <layout class="QVBoxLayout" name="verticalLayout_16">
@@ -297,6 +297,13 @@ QComboBox:on { /* shift the text when the popup opens */
              </layout>
             </item>
             <item>
+             <widget class="QPushButton" name="pushButton_reset">
+              <property name="text">
+               <string>reset</string>
+              </property>
+             </widget>
+            </item>
+            <item>
              <widget class="QComboBox" name="area_taken_slider">
               <item>
                <property name="text">
@@ -313,13 +320,6 @@ QComboBox:on { /* shift the text when the popup opens */
            </layout>
           </item>
          </layout>
-        </item>
-        <item>
-         <widget class="QPushButton" name="pushButton_reset">
-          <property name="text">
-           <string>Reset</string>
-          </property>
-         </widget>
         </item>
         <item>
          <layout class="QVBoxLayout" name="verticalLayout_15">
@@ -811,9 +811,9 @@ QComboBox:on { /* shift the text when the popup opens */
            </widget>
           </item>
           <item>
-           <widget class="QPushButton" name="mix_button">
-            <property name="text">
-             <string>PushButton</string>
+           <widget class="QProgressBar" name="progressBar">
+            <property name="value">
+             <number>24</number>
             </property>
            </widget>
           </item>

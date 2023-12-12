@@ -84,6 +84,7 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
             "Viewport 1": self.output_image_1,
             "Viewport 2": self.output_image_2,
         }
+        self.sliders_list = [self.slider_1 , self.slider_2 , self.slider_3 , self.slider_4]
         self.selection_modes_dict = { "Magnitude": ["Magnitude", "Phase"],
                                         "Phase": [ "Magnitude", "Phase"],
                                         "Real": ["Real", "Imaginary"],
@@ -134,7 +135,8 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
 
     def handle_button(self):
         # Connect the clicked signal to the browse_image method
-        self.mix_button.clicked.connect(self.mix_images)
+        for slider in self.sliders_list:
+            slider.valueChanged.connect(self.mix_images)
         self.pushButton_reset.clicked.connect(self.reset_brightness_contrast)
 
         # Connect mouseDoubleClickEvent for each widget
@@ -414,6 +416,7 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
     def mix_images(self):
         '''Mix images using the slider value'''
         # Implement logic to mix images using the slider value
+        self.progressBar.setValue(0)
         if self.images_dict:
             min_width, min_height = self.get_min_size()
             images_lists = []
@@ -429,14 +432,17 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
                 
             mix =  ImageMixer(images_lists)
             slider_values , mode = self.get_slider_mode_values()
-            
+            self.progressBar.setValue(25)
             
             output_image = mix.mix_images(slider_values, min_width, min_height , mode)
+            self.progressBar.setValue(50)
             # Create a QImage from the output_image
             bytes_per_line = min_width
             image_data = bytes(output_image.data)
             current_view = self.comboBox_2.currentText()
+            self.progressBar.setValue(75)
             self.plot_images(min_width, min_height,self.output_dictionary[current_view] , image_data)
+            self.progressBar.setValue(100)  
             
     def get_slider_mode_values(self):
 
