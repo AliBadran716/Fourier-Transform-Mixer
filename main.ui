@@ -315,6 +315,13 @@ QComboBox:on { /* shift the text when the popup opens */
          </layout>
         </item>
         <item>
+         <widget class="QPushButton" name="pushButton_reset">
+          <property name="text">
+           <string>Reset</string>
+          </property>
+         </widget>
+        </item>
+        <item>
          <layout class="QVBoxLayout" name="verticalLayout_15">
           <item>
            <layout class="QHBoxLayout" name="horizontalLayout_2">

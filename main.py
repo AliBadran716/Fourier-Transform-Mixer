@@ -89,6 +89,10 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
                                         "Real": ["Real", "Imaginary"],
                                         "Imaginary": ["Real", "Imaginary"]
                                         }
+        self.brightness = 0
+        self.contrast = 0
+
+        self.initial_mouse_pos = QPoint(0, 0)
 
         # Set up the QGraphicsScene for the view
         scene = QGraphicsScene()
@@ -131,9 +135,14 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
     def handle_button(self):
         # Connect the clicked signal to the browse_image method
         self.mix_button.clicked.connect(self.mix_images)
+        self.pushButton_reset.clicked.connect(self.reset_brightness_contrast)
+
         # Connect mouseDoubleClickEvent for each widget
         for widget, value in self.images_dict.items():
             widget.mouseDoubleClickEvent = lambda event, w=widget: self.on_mouse_click(event, w)
+            widget.mousePressEvent = (
+                lambda event, w=widget: self.mouse_press_event_brightness(event, w)
+            )
             value[0].mousePressEvent = lambda event, w=value[0]: self.mouse_press_event(event, w)
             value[0].mouseMoveEvent = lambda event, w=value[0]: self.mouse_move_event(event, w)
             value[0].mouseReleaseEvent = lambda event, w=value[0]: self.mouse_release_event(event, w)
@@ -143,6 +152,42 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
             values[3].currentIndexChanged.connect(functools.partial(self.plot_FT, values[0], values[3]))
         self.connect_comboboxes()
 
+    def reset_brightness_contrast(self, widget):
+        self.brightness = 0
+        self.contrast = 0
+        self.apply_brightness_contrast(self.active_widget)
+
+    def mouse_press_event_brightness(self, event, w):
+        if self.images_dict[w][2] is None:
+            return
+        print("mouse press event")
+
+        if event.button() == Qt.LeftButton:
+            # Calculate difference in mouse position
+            diff = event.pos() - self.initial_mouse_pos
+            print(f"X difference: {diff.x()}, Y difference: {diff.y()}")
+
+            # Use x difference for contrast, y difference for brightness
+            self.contrast = diff.x()
+            self.brightness = diff.y()
+            self.apply_brightness_contrast(w)
+            self.initial_mouse_pos = event.pos()
+
+    def apply_brightness_contrast(self, widget, alpha=1.0, beta=0):
+        # Convert the image to float32 to perform arithmetic operations
+        image = np.float32(self.images_dict[widget][2].get_image_data())
+        alpha = 1.0 + self.contrast / 100.0
+        beta = self.brightness
+
+        # Apply brightness and contrast adjustments
+        image = alpha * image + beta
+
+        # Clip values to ensure they are within the valid range [0, 255]
+        image = np.clip(image, 0, 255).astype("uint8")
+
+        hight, width = image.shape
+        # Update the displayed image
+        self.plot_images(width, hight, widget, image)
     def setScene(self, scene):
         # Set the scene for each widget
         for key, value in self.images_dict.items():
