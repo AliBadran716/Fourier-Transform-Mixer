@@ -89,6 +89,11 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
             "Viewport 1": self.output_image_1,
             "Viewport 2": self.output_image_2,
         }
+        self.selection_modes_dict = { "Magnitude": ["Magnitude", "Phase"],
+                                        "Phase": [ "Magnitude", "Phase"],
+                                        "Real": ["Real", "Imaginary"],
+                                        "Imaginary": ["Real", "Imaginary"]
+                                        }
 
         # Set up the QGraphicsScene for the view
         scene = QGraphicsScene()
@@ -116,6 +121,16 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
             # Get the dictionary key associated with the widget
             desired_key = next((key for key, value in self.images_dict.items() if value[0] == w and value[2]), None)
             region_selected = self.images_dict[desired_key][2].get_selected_region(selected_region, self.images_dict[desired_key][2].get_magnitude_spectrum())
+    
+    def connect_comboboxes(self, is_connected=True):
+            if is_connected:
+                for i in range(1, 5):
+                    combobox = getattr(self, f"mode_comboBox_{i}")
+                    combobox.currentIndexChanged.connect(functools.partial(self.handle_mode_combobox_change, i))
+            else:
+                for i in range(1, 5):
+                    combobox = getattr(self, f"mode_comboBox_{i}")
+                    combobox.currentIndexChanged.disconnect()
             
 
     def handle_button(self):
@@ -131,6 +146,7 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
             # Connect currentIndexChanged for each QComboBox using a loop
         for key, values in self.images_dict.items():
             values[3].currentIndexChanged.connect(functools.partial(self.plot_FT, values[0], values[3]))
+        self.connect_comboboxes()
 
     def setScene(self, scene):
         # Set the scene for each widget
@@ -394,6 +410,28 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
         for combox_mode in self.mode_combobox_list:
             mode.append(combox_mode.currentText())
         return normalized_slider_values , mode
+    
+
+    def handle_mode_combobox_change(self, index):
+        # Get the current combobox that triggered the signal
+        current_combobox = self.sender()
+        print(current_combobox.objectName())
+
+        # Get the current text of the combobox
+        current_text = current_combobox.currentText()
+
+        # Disconnect the signal temporarily
+        self.connect_comboboxes(False)
+
+        # Update the items of the remaining comboboxes
+        for i in range(1, 5):
+            if i != index:
+                combobox = getattr(self, f"mode_comboBox_{i}")
+                combobox.clear()
+                combobox.addItems(self.selection_modes_dict[current_text])
+
+        # Reconnect the signal
+        self.connect_comboboxes(True)
 
   
 
