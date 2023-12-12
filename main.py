@@ -53,7 +53,7 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
         """
         super(MainApp, self).__init__(parent)
         self.setupUi(self)
-        self.images_dict = {
+        self.images_dict = { # A dictionary to store Image instances and their associated widgets
             self.image_1_widget: [self.graphicsView_1,  # FT plot widget
                                   self.image_1_widget.objectName(),  # widget name
                                   None,  # image instance
@@ -74,16 +74,11 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
                                   None,  # image instance
                                   self.FT_combo_box_4  # FT combo box
                                   ],
-        }  # A dictionary to store Image instances
+        }  
         self.images_counter = 0  # A counter to keep track of the number of images
         self.mixing_ratios = []
         self.active_widget = None  # A variable to store the active widget
         self.active_widget_name = None  # A variable to store the active widget name
-        # Store the initial window state
-        # self.image_1_widget_active = True
-        # self.image_2_widget_active = False
-        # self.image_3_widget_active = False
-        # self.image_4_widget_active = False
         self.mode_combobox_list = [ self.mode_comboBox_1 , self.mode_comboBox_2 , self.mode_comboBox_3 , self.mode_comboBox_4] 
         self.output_dictionary ={
             "Viewport 1": self.output_image_1,
@@ -223,43 +218,53 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
             if value[2] is None:
                 continue
             image_data = value[2].get_image_data()
-            # Resize the image while maintaining the aspect ratio
             resized_image = cv2.resize(image_data, (min_width, min_height))
             height, width = resized_image.shape
             image_data = bytes(resized_image.data)
-            self.plot_images(width, height, widget_name, image_data)
-      
-    def plot_images(self , width , height , widget_name , image_data):
-            bytes_per_line = width
+            self.plot_images(width, height, widget_name, image_data, True)
 
-            q_image = QImage(
-                image_data,
-                width,
-                height,
-                bytes_per_line,
-                QImage.Format_Grayscale8,
-            )
-            pixmap = QPixmap.fromImage(q_image)
+    def plot_images(self, width, height, widget_name, image_data, is_input_image=False):
+        bytes_per_line = width
 
-            # Create the QGraphicsScene and set it for the respective image widget
-            image_scene = self.create_image_scene(widget_name)
+        q_image = QImage(
+            image_data,
+            width,
+            height,
+            bytes_per_line,
+            QImage.Format_Grayscale8,
+        )
+        pixmap = QPixmap.fromImage(q_image)
 
-            # Clear the scene before adding a new item
-            image_scene.clear()
+        image_scene = self.create_image_scene(widget_name)
+        image_scene.clear()
 
-            # Create a QGraphicsPixmapItem and add it to the scene
-            pixmap_item = QGraphicsPixmapItem(pixmap)
-            image_scene.addItem(pixmap_item)
+        pixmap_item = QGraphicsPixmapItem(pixmap)
+        image_scene.addItem(pixmap_item)
 
-            # Set the initial view to fit the scene content
-            initial_view_rect = QRectF(0, 0, width, height)
-            widget_name.setSceneRect(initial_view_rect)
+        if is_input_image:
+            # Set the size of the view to match the size of the image
+            widget_name.setFixedSize(width, height)
 
-            # Fit the view to the pixmap item's bounding rectangle
-            widget_name.fitInView(pixmap_item.boundingRect(), Qt.KeepAspectRatio)
+            # Disable scroll bars
+            widget_name.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+            widget_name.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
 
-            # Set the margins to zero
-            widget_name.setContentsMargins(0, 0, 0, 0)
+            # Set the size policy to ignore the size hint
+            widget_name.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored)
+
+        else:
+            # Fit the view to the pixmap item's bounding rectangle without keeping the aspect ratio
+            widget_name.fitInView(pixmap_item.boundingRect(), Qt.IgnoreAspectRatio)
+
+        # Set the margins to zero
+        widget_name.setContentsMargins(0, 0, 0, 0)
+
+
+
+
+
+
+
 
     def create_image_scene(self, image_view):
         # Create the QGraphicsScene and set it for the respective image widget
@@ -310,7 +315,7 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
 
             image_data = bytes(magnitude_spectrum.data)
             # plot image
-            self.plot_images(width, height, widget, image_data)
+            self.plot_images(width, height, widget, image_data, True)
         elif current_text == "FT Phase":
             # Plot the phase spectrum
             # self.plot_image_view(phase_spectrum, widget)
@@ -318,7 +323,7 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
 
             image_data = bytes(phase_spectrum.data)
             # plot image
-            self.plot_images(width, height, widget, image_data)
+            self.plot_images(width, height, widget, image_data, True)
         elif current_text == "FT Real":
             # Plot the real part
             # self.plot_image_view(real_part, widget)
@@ -327,7 +332,7 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
 
             image_data = bytes(real_part.data)
             # plot image
-            self.plot_images(width, height, widget, image_data)
+            self.plot_images(width, height, widget, image_data, True)
         elif current_text == "FT Imaginary":
             # Plot the imaginary part
             # self.plot_image_view(imaginary_part, widget)
@@ -337,7 +342,8 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
 
             image_data = bytes(imaginary_part.data)
             # plot image
-            self.plot_images(width, height, widget, image_data)
+            self.plot_images(width, height, widget, image_data, True)
+            
     def plot_image_view(self, image_data, widget):
 
         widget.ui.roiPlot.hide()
@@ -432,8 +438,6 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
 
         # Reconnect the signal
         self.connect_comboboxes(True)
-
-  
 
 
 def main():  # method to start app
