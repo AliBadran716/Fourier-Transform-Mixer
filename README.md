@@ -1,125 +1,57 @@
-
----
+## Fourier Transform Mixer
 
 # Project Overview
 
-This PyQt5-based desktop program aims to illustrate the importance of magnitude and phase components in a 2D signal, emphasizing different frequency contributions. The software includes various features for image processing, Fourier Transform (FT) components, mixer controls, and real-time mixing.
+The Fourier Transform Mixer is a desktop program designed and implemented to illustrate the relative importance of magnitude and phase components in a 2D signal, particularly images. This tool provides insights into the frequencies and contributions of different components to the signal. It allows users to mix and visualize Fourier components of grayscale images, offering a versatile educational and analytical platform.
 
-## User Interface (UI) Design:
+# Features
 
-### Main Window Layout:
+## Image Viewers
 
-- [ ] Create a main window layout with placeholders for image viewports and output viewports.
-- [ ] Include sliders for brightness/contrast adjustments.
+Open and View Images: Load up to four grayscale images simultaneously.
+Color Conversion: Automatically converts colored images to grayscale.
+Unified Sizes: Maintain a unified size for opened images based on the smallest size among them.
+FT Components Display: View Fourier Transform components, including Magnitude, Phase, Real, and Imaginary parts.
+Easy Browse: Change images by double-clicking on the viewer.
+Brightness/Contrast: Adjust brightness and contrast for each image and its components.
 
-### Image Viewports:
+## Components Mixer
 
-- [ ] Implement the ability to open and view four grayscale images.
-- [ ] Convert colored images to grayscale if necessary.
-- [ ] Ensure all opened images have the same size (resize if needed).
-- [ ] Enable double-click functionality for changing images.
+Customizable Weights: Allow users to customize Fourier Transform weights for each image using sliders.
+Realtime Mixing: Provide a progress bar for lengthy mixing operations.
+Thread Handling: Cancel previous operations when a new mixing request is made.
 
-### Fourier Transform (FT) Components:
+## Regions Mixer
 
-- [ ] Create a combo-box or drop-menu for selecting FT components (Magnitude, Phase, Real, Imaginary).
-- [ ] Implement displays for each image's selected FT component.
+Region Selection: Enable users to pick regions for output, including inner (low frequencies) and outer (high frequencies).
+Customizable Region Size: Allow users to customize the size or percentage of the selected region.
 
-### Output Viewports:
+# Code Practices
 
-- [ ] Implement two output viewports similar to image viewports.
-- [ ] Allow the user to control where the mixer result will be displayed.
+Object-Oriented Approach: Implement OOP concepts for better code organization and readability.
+Logging: Utilize Python's logging library for tracking user interactions and debugging.
 
-### Brightness/Contrast Controls:
+# Tools Used
 
-- [ ] Enable mouse dragging for adjusting brightness and contrast in image viewports.
-- [ ] Extend this functionality to all four components.
+Python: The core programming language for implementation.
+PyQt5: Used for creating the desktop application's GUI.
+OpenCV: Employed for image processing tasks.
+NumPy: Utilized for numerical operations and array manipulations.
+PyQtGraph: Used for displaying and interacting with images and their components.
 
-### Components Mixer:
+# Getting Started
 
-- [ ] Implement sliders for customizing weights of each image's FT.
-- [ ] Calculate the weighted average of FT components for the mixer result.
+## Clone Repository:
 
-### Regions Mixer:
+git clone https://github.com/your-username/Fourier-Transform-Mixer.git
 
-- [ ] Implement rectangle drawing for selecting regions in each FT component.
-- [ ] Include options for selecting inner or outer regions.
-- [ ] Allow customization of region size via sliders or resize handles.
+## Install Dependencies:
 
-### Realtime Mixing:
+pip install -r requirements.txt
 
-- [ ] Implement a progress bar to indicate the mixing process.
-- [ ] Ensure the mixing process can be canceled if the user initiates a new operation.
+## Run the Application:
 
-## Back-End Logic:
-
-### Image Processing:
-
-- [ ] Implement image loading and conversion to grayscale.
-- [ ] Ensure resizing of images to a unified size.
-
-### Fourier Transform:
-
-- [ ] Implement Fourier Transform for each image.
-- [ ] Calculate Magnitude, Phase, Real, and Imaginary components.
-
-### Mixer Logic:
-
-- [ ] Implement the mixer logic using weighted averages of FT components.
-- [ ] Ensure the customization of weights via sliders.
-
-### Regions Mixer Logic:
-
-- [ ] Implement logic for selecting inner or outer regions in FT components.
-- [ ] Allow the user to customize the size of the selected region.
-
-### Realtime Mixing Logic:
-
-- [ ] Implement the mixing process with an ifft operation.
-- [ ] Handle the cancellation of ongoing mixing processes.
-
-## Threading:
-
-### Thread Management:
-
-- [ ] Implement threading to handle time-consuming ifft operations.
-- [ ] Ensure proper cancellation of previous operations when new requests are made.
-
-## Testing:
-
-### Unit Testing:
-
-- [ ] Test individual components and functions.
-- [ ] Ensure UI elements and backend logic work as expected.
-
-### Integration Testing:
-
-- [ ] Test the integration of UI and backend components.
-- [ ] Check for responsiveness and real-time updates.
-
-## Documentation:
-
-### Code Documentation:
-
-- [ ] Add comments and documentation to your code for future reference.
-
-### User Guide:
-
-- [ ] Prepare a user guide explaining how to use each feature.
-
-## Additional Considerations:
-
-### Error Handling:
-
-- [ ] Implement error handling for potential issues during image loading, processing, and mixing.
-
-### UI Enhancements:
-
-- [ ] Consider adding visual indicators for the selected regions in FT components.
-
-### User Feedback:
-
-- [ ] Provide feedback to the user during lengthy operations, such as mixing.
-
----
-
-This format allows for easy tracking of completed tasks by marking the checkboxes. Update the checkboxes as tasks are completed during the development process.
+python main.py
+Contributors
+Your Name
+Collaborator 1
