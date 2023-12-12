@@ -84,7 +84,7 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
         # self.image_2_widget_active = False
         # self.image_3_widget_active = False
         # self.image_4_widget_active = False
-
+        self.mode_combobox_list = [ self.mode_comboBox_1 , self.mode_comboBox_2 , self.mode_comboBox_3 , self.mode_comboBox_4] 
         self.output_dictionary ={
             "Viewport 1": self.output_image_1,
             "Viewport 2": self.output_image_2,
@@ -191,6 +191,9 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
             self, "Open Image", "", "Image Files (*.jpg *.gif *.png *.jpeg *.svg)"
         )
         image_instance = Image(str(image_path))
+        if self.images_counter != 1:
+            min_width, min_height = self.get_min_size()
+            image_instance.set_image_size(min_width, min_height)
         # Update the third element of the list associated with self.active_widget
         self.images_dict[self.active_widget][2] = image_instance
         self.display_image()
@@ -365,17 +368,18 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
                     images_lists.append(image_list[2])
                 
             mix =  ImageMixer(images_lists)
-            slider_values = self.get_slider_values()
+            slider_values , mode = self.get_slider_mode_values()
             
             
-            output_image = mix.mix_images(slider_values, min_width, min_height)
+            output_image = mix.mix_images(slider_values, min_width, min_height , mode)
             # Create a QImage from the output_image
             bytes_per_line = min_width
             image_data = bytes(output_image.data)
             current_view = self.comboBox_2.currentText()
             self.plot_images(min_width, min_height,self.output_dictionary[current_view] , image_data)
             
-    def get_slider_values(self):
+    def get_slider_mode_values(self):
+
         '''Get the slider values and normalize them'''
         # Get the slider values
         slider_values = [
@@ -385,20 +389,13 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
             self.slider_4.value(),
         ]
         # Normalize the slider values
-        summation = sum(slider_values)
-        normalized_slider_values = [value / summation for value in slider_values]
-        return normalized_slider_values
+        normalized_slider_values = [value / 100 for value in slider_values]
+        mode = []
+        for combox_mode in self.mode_combobox_list:
+            mode.append(combox_mode.currentText())
+        return normalized_slider_values , mode
 
-    # def mix_images(self):
-    #     # Implement logic to mix images using the slider value
-    #     if self.images_list:
-    #         mix_ratio = self.slider.value() / 100.0
-    #         mixed_image_data = self.image_instnace.apply_mixed_transform(self.images_list, mix_ratio)
-    #         h, w = mixed_image_data.shape
-    #         bytes_per_line = w
-    #         q_image = QImage(mixed_image_data.data, w, h, bytes_per_line, QImage.Format_Grayscale8)
-    #         pixmap = QPixmap.fromImage(q_image)
-    #         self.image_label.setPixmap(pixmap)
+  
 
 
 def main():  # method to start app

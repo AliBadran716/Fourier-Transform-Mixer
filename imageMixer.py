@@ -4,7 +4,7 @@ class ImageMixer:
     def __init__(self, images_list):
         self.images_list = images_list
 
-    def mix_images(self, mix_ratios ,min_width, min_height):
+    def mix_images(self, mix_ratios ,min_width, min_height , mode):
         # Validate the mix_ratios
         # if len(mix_ratios) != len(self.images_list):
         #     raise ValueError("The number of mix ratios should be equal to the number of images.")
@@ -16,11 +16,20 @@ class ImageMixer:
         # Mix the amplitudes and phases based on the mix ratios
         for i, image in enumerate(self.images_list):
             mix_ratio = mix_ratios[i]
-            mixed_amplitudes += mix_ratio * image.get_magnitude_spectrum()
-            mixed_phases += mix_ratio * image.get_phase_spectrum()
+            if mode[i] == 'Magnitude':
+                mixed_amplitudes += mix_ratio * image.get_magnitude_spectrum()
+            elif mode[i] == 'Phase':
+                mixed_phases += mix_ratio * image.get_phase_spectrum()
+            elif mode[i] == 'Real':
+                mixed_amplitudes += mix_ratio * image.get_real_part()
+            elif mode[i] == 'Imaginary':    
+                mixed_phases += mix_ratio * image.get_imaginary_part()
 
         # Reconstruct the mixed image using the inverse Fourier transform
-        mixed_transform = mixed_amplitudes * np.exp(1j * mixed_phases)
+        if mode[0] == 'Magnitude' or mode[0] == 'Phase':
+            mixed_transform = mixed_amplitudes * np.exp(1j * mixed_phases)
+        if mode[0] == 'Real' or mode[0] == 'Imaginary':
+            mixed_transform = mixed_amplitudes + 1j * mixed_phases  
         mixed_image_data = np.fft.ifft2(mixed_transform)
         mixed_image_data = np.abs(mixed_image_data).astype(np.uint8)
         mixed_image_data = cv2.resize(mixed_image_data, (min_width, min_height))
