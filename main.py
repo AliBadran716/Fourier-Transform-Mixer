@@ -28,6 +28,7 @@ import sys
 import functools
 from image import Image
 from imageMixer import ImageMixer
+from overlay import overlay
 from PyQt5.QtWidgets import QGraphicsScene
 from PyQt5.QtWidgets import QGraphicsPixmapItem
 from PyQt5.QtCore import QRectF
@@ -58,22 +59,26 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
             self.image_1_widget: [self.graphicsView_1,  # FT plot widget
                                   self.image_1_widget.objectName(),  # widget name
                                   None,  # image instance
-                                  self.FT_combo_box_1  # FT combo box
+                                  self.FT_combo_box_1,  # FT combo box
+                                  None  # adjusted image instance
                                   ],
             self.image_2_widget: [self.graphicsView_2,  # FT plot widget
                                   self.image_2_widget.objectName(),  # widget name
                                   None,  # image instance
-                                  self.FT_combo_box_2  # FT combo box
+                                  self.FT_combo_box_2,  # FT combo box
+                                  None  # adjusted image instance
                                   ],
             self.image_3_widget: [self.graphicsView_3,  # FT plot widget
                                   self.image_3_widget.objectName(),  # widget name
                                   None,  # image instance
-                                  self.FT_combo_box_3  # FT combo box
+                                  self.FT_combo_box_3,  # FT combo box
+                                  None  # adjusted image instance
                                   ],
             self.image_4_widget: [self.graphicsView_4,  # FT plot widget
                                   self.image_4_widget.objectName(),  # widget name
                                   None,  # image instance
-                                  self.FT_combo_box_4  # FT combo box
+                                  self.FT_combo_box_4,  # FT combo box
+                                  None  # adjusted image instance
                                   ],
         }  
         self.images_counter = 0  # A counter to keep track of the number of images
@@ -146,9 +151,9 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
             widget.mousePressEvent = (
                 lambda event, w=widget: self.mouse_press_event_brightness(event, w)
             )
-            value[0].mousePressEvent = lambda event, w=value[0]: self.mouse_press_event(event, w)
-            value[0].mouseMoveEvent = lambda event, w=value[0]: self.mouse_move_event(event, w)
-            value[0].mouseReleaseEvent = lambda event, w=value[0]: self.mouse_release_event(event, w)
+            # value[0].mousePressEvent = lambda event, w=value[0]: self.mouse_press_event(event, w)
+            # value[0].mouseMoveEvent = lambda event, w=value[0]: self.mouse_move_event(event, w)
+            # value[0].mouseReleaseEvent = lambda event, w=value[0]: self.mouse_release_event(event, w)
 
             # Connect currentIndexChanged for each QComboBox using a loop
         for key, values in self.images_dict.items():
@@ -195,9 +200,10 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
         # Set the scene for each widget
         for key, value in self.images_dict.items():
             key.setScene(scene)
-            value[0].setScene(scene)
+            # value[0].setScene(scene)
 
     def setupImagesView(self):
+
         for widget_name, value in self.images_dict.items():
             break
             value[0].ui.histogram.hide()
@@ -321,6 +327,8 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
         return image_scene
 
     def plot_FT(self, widget, combobox):
+
+
         # Get the current text of the combobox
         current_text = combobox.currentText()
 
@@ -330,60 +338,61 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
         # If desired_key is None, then there was no matching widget in the dictionary
         if desired_key is None:
             return
-        # Get the image instance from the dictionary
-        image_instance = self.images_dict[desired_key][2]
-
-        # Compute Phase Shift for Normalizing
-        phase_shift = np.fft.fftshift(image_instance.get_fourier_transform())
-
-        # Compute the magnitude spectrum
-        magnitude_spectrum = 20 * np.log(image_instance.get_magnitude_spectrum())
-
-        # Compute the phase spectrum
-        phase_spectrum = np.angle(phase_shift)
-
-        # Compute the real part
-        real_part = 20 * np.log(np.real(phase_shift))
-
-        # Compute the imaginary part
-        imaginary_part = np.imag(phase_shift)
-
-        if current_text == "FT Magnitude":
-            # Plot the magnitude spectrum
-            # self.plot_image_view(magnitude_spectrum, widget)
-            # get height and width of the image
-            height, width = magnitude_spectrum.shape
-
-            image_data = bytes(magnitude_spectrum.data)
-            # plot image
-            self.plot_images(width, height, widget, image_data, True)
-        elif current_text == "FT Phase":
-            # Plot the phase spectrum
-            # self.plot_image_view(phase_spectrum, widget)
-            height, width = phase_spectrum.shape
-
-            image_data = bytes(phase_spectrum.data)
-            # plot image
-            self.plot_images(width, height, widget, image_data, True)
-        elif current_text == "FT Real":
-            # Plot the real part
-            # self.plot_image_view(real_part, widget)
-            # get height and width of the image
-            height, width = real_part.shape
-
-            image_data = bytes(real_part.data)
-            # plot image
-            self.plot_images(width, height, widget, image_data, True)
-        elif current_text == "FT Imaginary":
-            # Plot the imaginary part
-            # self.plot_image_view(imaginary_part, widget)
-
-            # get height and width of the image
-            height, width = imaginary_part.shape
-
-            image_data = bytes(imaginary_part.data)
-            # plot image
-            self.plot_images(width, height, widget, image_data, True)
+        # Create an instance of the overlay class
+        self.overlay_instance = overlay(self.images_dict[desired_key][0],
+                                        self.images_dict[desired_key][2])
+        #
+        # # Compute Phase Shift for Normalizing
+        # phase_shift = np.fft.fftshift(image_instance.get_fourier_transform())
+        #
+        # # Compute the magnitude spectrum
+        # magnitude_spectrum = 20 * np.log(phase_shift)
+        #
+        # # Compute the phase spectrum
+        # phase_spectrum = np.angle(phase_shift)
+        #
+        # # Compute the real part
+        # real_part = 20 * np.log(np.abs(np.real(phase_shift)))
+        #
+        # # Compute the imaginary part
+        # imaginary_part = np.imag(phase_shift)
+        #
+        # if current_text == "FT Magnitude":
+        #     # Plot the magnitude spectrum
+        #     self.plot_image_view(magnitude_spectrum, widget)
+        #     # get height and width of the image
+        #     # height, width = magnitude_spectrum.shape
+        #     #
+        #     # image_data = bytes(magnitude_spectrum.data)
+        #     # plot image
+        #     # self.plot_images(width, height, widget, image_data, True)
+        # elif current_text == "FT Phase":
+        #     # Plot the phase spectrum
+        #     self.plot_image_view(phase_spectrum, widget)
+        #     # height, width = phase_spectrum.shape
+        #
+        #     # image_data = bytes(phase_spectrum.data)
+        #     # plot image
+        #     # self.plot_images(width, height, widget, image_data, True)
+        # elif current_text == "FT Real":
+        #     # Plot the real part
+        #     self.plot_image_view(real_part, widget)
+        #     # get height and width of the image
+        #     # height, width = real_part.shape
+        #
+        #     # image_data = bytes(real_part.data)
+        #     # plot image
+        #     # self.plot_images(width, height, widget, image_data, True)
+        # elif current_text == "FT Imaginary":
+        #     # Plot the imaginary part
+        #     self.plot_image_view(imaginary_part, widget)
+        #
+        #     # get height and width of the image
+        #     # height, width = imaginary_part.shape
+        #
+        #     # image_data = bytes(imaginary_part.data)
+        #     # plot image
+        #     # self.plot_images(width, height, widget, image_data, True)
 
     def plot_image_view(self, image_data, widget):
 

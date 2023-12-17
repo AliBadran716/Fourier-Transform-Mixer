@@ -21,10 +21,19 @@ class Image:
 
     def compute_fourier_transform(self):
         self.fourier_transform = np.fft.fft2(self.image_data)
+        self.shifted_fourier_transform = np.fft.fftshift(self.fourier_transform)
+
         self.magnitude_spectrum = np.abs(self.fourier_transform)
+        self.shifted_magnitude_spectrum = 20 * np.log(self.shifted_fourier_transform)
+
         self.phase_spectrum = np.angle(self.fourier_transform)
+        self.shifted_phase_spectrum = np.angle(self.shifted_fourier_transform)
+
         self.real_part = np.real(self.fourier_transform)
+        self.shifted_real_part = 20 * np.log(np.abs(np.real(self.shifted_fourier_transform)))
+
         self.imaginary_part = np.imag(self.fourier_transform)
+        self.shifted_imaginary_part = np.imag(self.shifted_fourier_transform)
 
     def get_sampling_frequencies(self):
         return self.sampling_frequency_x, self.sampling_frequency_y
@@ -46,7 +55,11 @@ class Image:
     
     def get_image_data(self):
         return self.image_data
-    
+
+    def get_shifted(self):
+        shifted_data = [self.shifted_fourier_transform, self.shifted_magnitude_spectrum, self.shifted_phase_spectrum, self.shifted_real_part, self.shifted_imaginary_part]
+        return shifted_data
+
     def set_image_size(self, width, height):   
         self.image_data = cv2.resize(self.image_data, (width, height))
         self.compute_fourier_transform()

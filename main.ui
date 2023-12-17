@@ -385,7 +385,7 @@ QComboBox:on { /* shift the text when the popup opens */
                </widget>
               </item>
               <item>
-               <widget class="QGraphicsView" name="graphicsView_1">
+               <widget class="GraphicsLayoutWidget" name="graphicsView_1">
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
                   <horstretch>0</horstretch>
@@ -498,7 +498,7 @@ QComboBox:on { /* shift the text when the popup opens */
                </widget>
               </item>
               <item>
-               <widget class="QGraphicsView" name="graphicsView_2">
+               <widget class="GraphicsLayoutWidget" name="graphicsView_2">
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
                   <horstretch>0</horstretch>
@@ -611,7 +611,7 @@ QComboBox:on { /* shift the text when the popup opens */
                </widget>
               </item>
               <item>
-               <widget class="QGraphicsView" name="graphicsView_3">
+               <widget class="GraphicsLayoutWidget" name="graphicsView_3">
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
                   <horstretch>0</horstretch>
@@ -724,7 +724,7 @@ QComboBox:on { /* shift the text when the popup opens */
                </widget>
               </item>
               <item>
-               <widget class="QGraphicsView" name="graphicsView_4">
+               <widget class="GraphicsLayoutWidget" name="graphicsView_4">
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
                   <horstretch>0</horstretch>
@@ -841,12 +841,19 @@ QComboBox:on { /* shift the text when the popup opens */
      <x>0</x>
      <y>0</y>
      <width>1440</width>
-     <height>23</height>
+     <height>18</height>
     </rect>
    </property>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>GraphicsLayoutWidget</class>
+   <extends>QGraphicsView</extends>
+   <header>pyqtgraph.h</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>
