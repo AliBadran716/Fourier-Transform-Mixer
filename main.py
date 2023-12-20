@@ -98,6 +98,7 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
                                         }
         self.brightness = 0
         self.contrast = 0
+        self.mouse_dragging = False  # Flag to track if the mouse is dragging
 
         self.initial_mouse_pos = QPoint(0, 0)
         self.progressBar.setValue(0)
@@ -119,6 +120,34 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
         if self.rubber_band.isVisible():
             self.rubber_band.setGeometry(QRect(self.origin, event.pos()).normalized())
 
+    def mouse_press_event0(self, event, w):
+        if event.button() == Qt.LeftButton:
+            self.mouse_dragging = True
+            self.initial_mouse_pos = event.pos()
+            self.active_widget = w
+            self.active_widget_name = w.objectName()
+
+    def mouse_move_event0(self, event, w):
+        if self.images_dict[w][2] is None:
+            return
+
+        if event.type() == QEvent.MouseButtonPress and event.button() == Qt.LeftButton:
+            self.mouse_dragging = True
+            self.initial_mouse_pos = event.pos()
+
+        elif event.type() == QEvent.MouseMove and self.mouse_dragging:
+            diff = event.pos() - self.initial_mouse_pos
+            self.brightness = diff.x()  # Use positive values for right movement
+            self.contrast = -diff.y()  # Invert for up movement
+            self.apply_brightness_contrast(w)
+            # self.initial_mouse_pos = event.pos()
+
+        elif event.type() == QEvent.MouseButtonRelease and event.button() == Qt.LeftButton:
+            self.mouse_dragging = False
+
+    def mouse_release_event0(self, event, w):
+        if event.button() == Qt.LeftButton:
+            self.mouse_dragging = False
     def mouse_release_event(self, event, w):
         if self.rubber_band.isVisible():
             selected_region = self.rubber_band.geometry()
@@ -148,12 +177,13 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
         # Connect mouseDoubleClickEvent for each widget
         for widget, value in self.images_dict.items():
             widget.mouseDoubleClickEvent = lambda event, w=widget: self.on_mouse_click(event, w)
-            widget.mousePressEvent = (
-                lambda event, w=widget: self.mouse_press_event_brightness(event, w)
-            )
+
             # value[0].mousePressEvent = lambda event, w=value[0]: self.mouse_press_event(event, w)
             # value[0].mouseMoveEvent = lambda event, w=value[0]: self.mouse_move_event(event, w)
             # value[0].mouseReleaseEvent = lambda event, w=value[0]: self.mouse_release_event(event, w)
+            widget.mousePressEvent = lambda event, w=widget: self.mouse_press_event0(event, w)
+            widget.mouseMoveEvent = lambda event, w=widget: self.mouse_move_event0(event, w)
+            widget.mouseReleaseEvent = lambda event, w=widget: self.mouse_release_event0(event, w)
 
             # Connect currentIndexChanged for each QComboBox using a loop
         for key, values in self.images_dict.items():
@@ -165,37 +195,21 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
         self.contrast = 0
         self.apply_brightness_contrast(self.active_widget)
 
-    def mouse_press_event_brightness(self, event, w):
-        if self.images_dict[w][2] is None:
-            return
-        print("mouse press event")
 
-        if event.button() == Qt.LeftButton:
-            # Calculate difference in mouse position
-            diff = event.pos() - self.initial_mouse_pos
-            print(f"X difference: {diff.x()}, Y difference: {diff.y()}")
-
-            # Use x difference for contrast, y difference for brightness
-            self.contrast = diff.x()
-            self.brightness = diff.y()
-            self.apply_brightness_contrast(w)
-            self.initial_mouse_pos = event.pos()
 
     def apply_brightness_contrast(self, widget, alpha=1.0, beta=0):
-        # Convert the image to float32 to perform arithmetic operations
+        if self.images_dict[widget][2] is None:
+            return
+
         image = np.float32(self.images_dict[widget][2].get_image_data())
         alpha = 1.0 + self.contrast / 100.0
         beta = self.brightness
-
-        # Apply brightness and contrast adjustments
-        image = alpha * image + beta
-
-        # Clip values to ensure they are within the valid range [0, 255]
+        image = alpha * (image - 128) + 128 + beta
         image = np.clip(image, 0, 255).astype("uint8")
 
         hight, width = image.shape
-        # Update the displayed image
         self.plot_images(width, hight, widget, image)
+
     def setScene(self, scene):
         # Set the scene for each widget
         for key, value in self.images_dict.items():
