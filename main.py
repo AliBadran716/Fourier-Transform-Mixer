@@ -1,42 +1,27 @@
-from PyQt5 import QtCore
-from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
-from PyQt5.QtGui import *
-from PyQt5.QtGui import QPixmap
-from PyQt5.QtWidgets import QApplication, QFileDialog
-from PyQt5.uic import loadUiType
-import pyqtgraph as pg
-import cv2
-import numpy as np
-import pandas as pd
-
-import os
+import functools
 import sys
 from os import path
+
+import cv2
+import numpy as np
+import pyqtgraph as pg
+from PyQt5.QtCore import *
+from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QPainter
+from PyQt5.QtGui import QPixmap, QImage
 from PyQt5.QtWidgets import (
     QApplication,
     QMainWindow,
-    QLabel,
-    QVBoxLayout,
-    QPushButton,
-    QSlider,
 )
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QImage, QPixmap
-import sys
-import functools
+from PyQt5.QtWidgets import QFileDialog
+from PyQt5.QtWidgets import QRubberBand, QGraphicsScene, QGraphicsPixmapItem
+from PyQt5.QtWidgets import QSizePolicy
+from PyQt5.uic import loadUiType
+
 from image import Image
 from imageMixer import ImageMixer
 from overlay import overlay
-from PyQt5.QtWidgets import QGraphicsScene
-from PyQt5.QtWidgets import QGraphicsPixmapItem
-from PyQt5.QtCore import QRectF
-from PyQt5.QtWidgets import QSizePolicy
-from PyQt5.QtGui import QPainter
-from PyQt5.QtGui import QPixmap, QImage
-from pyqtgraph import ImageItem
-from PyQt5.QtWidgets import QRubberBand, QGraphicsScene, QGraphicsPixmapItem
-from PyQt5.QtCore import Qt, QRectF, QSizeF
 
 FORM_CLASS, _ = loadUiType(
     path.join(path.dirname(__file__), "main.ui")
@@ -59,25 +44,25 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
                                   self.image_1_widget.objectName(),  # widget name
                                   None,  # image instance
                                   self.FT_combo_box_1,  # FT combo box
-                                  None  # adjusted image instance
+                                  None  # overlay instance
                                   ],
             self.image_2_widget: [self.graphicsView_2,  # FT plot widget
                                   self.image_2_widget.objectName(),  # widget name
                                   None,  # image instance
                                   self.FT_combo_box_2,  # FT combo box
-                                  None  # adjusted image instance
+                                  None  # overlay instance
                                   ],
             self.image_3_widget: [self.graphicsView_3,  # FT plot widget
                                   self.image_3_widget.objectName(),  # widget name
                                   None,  # image instance
                                   self.FT_combo_box_3,  # FT combo box
-                                  None  # adjusted image instance
+                                  None  # overlay instance
                                   ],
             self.image_4_widget: [self.graphicsView_4,  # FT plot widget
                                   self.image_4_widget.objectName(),  # widget name
                                   None,  # image instance
                                   self.FT_combo_box_4,  # FT combo box
-                                  None  # adjusted image instance
+                                  None  # overlay instance
                                   ],
         }
         self.images_counter = 0  # A counter to keep track of the number of images
@@ -191,7 +176,8 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
         for key, values in self.images_dict.items():
             values[3].currentIndexChanged.connect(functools.partial(self.plot_FT, values[0], values[3]))
         self.connect_comboboxes()
-
+        # Connect the currentIndexChanged signal to the change_area_region method
+        self.area_taken_region.currentIndexChanged.connect(lambda : self.overlay_instance.change_area_region)
     def reset_brightness_contrast(self, widget):
         self.brightness = 0
         self.contrast = 0
@@ -274,8 +260,6 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
             image_instance.set_image_size(min_width, min_height)
         # Update the third element of the list associated with self.active_widget
         self.images_dict[self.active_widget][2] = image_instance
-        image_instance = Image(str(image_path))
-        self.images_dict[self.active_widget][4] = image_instance
         self.display_image()
         # Call Plot FT
         self.plot_FT(self.images_dict[self.active_widget][0], self.images_dict[self.active_widget][3])
@@ -343,7 +327,6 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
         return image_scene
 
     def plot_FT(self, widget, combobox):
-
         # Get the current text of the combobox
         current_text = combobox.currentText()
 
@@ -358,10 +341,15 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
         # Create an instance of the overlay class
         self.overlay_instance = overlay(self.images_dict[desired_key][0],
                                         self.images_dict[desired_key][2],
-                                        self.images_dict[desired_key][4],
                                         current_text,
                                         area_region,
                                         )
+        # Connect the sig_ROI_changed signal to the mix_images method
+        self.overlay_instance.sig_emitter.sig_ROI_changed.connect(self.mix_images)
+        # Connect the currentIndexChanged signal to the change_area_region method
+        self.area_taken_region.currentIndexChanged.connect(self.overlay_instance.change_area_region)
+        # Update the dictionary
+        self.images_dict[desired_key][4] = self.overlay_instance
         self.mix_images()
 
     def plot_image_view(self, image_data, widget):
@@ -411,7 +399,7 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
                     image_list[2].set_image_size(min_width, min_height)
                     images_lists.append(image_list[2])
 
-            self.overlay_instance.update_mask_size()
+                image_list[4].update_mask_size()
 
             mix = ImageMixer(images_lists)
             slider_values, mode = self.get_slider_mode_values()

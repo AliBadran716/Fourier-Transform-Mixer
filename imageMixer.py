@@ -13,16 +13,22 @@ class ImageMixer:
         for i, image in enumerate(self.images_list):
             mix_ratio = mix_ratios[i]
             if mode[i] == 'Magnitude':
-                mixed_amplitudes += mix_ratio * image.get_magnitude_spectrum()
+                mixed_amplitudes += mix_ratio * image.get_magnitude_spectrum() * image.get_window_mask()
             elif mode[i] == 'Phase':
-                mixed_phases += mix_ratio * image.get_phase_spectrum()
+                mixed_phases += mix_ratio * image.get_phase_spectrum() * image.get_window_mask()
             elif mode[i] == 'Real':
-                mixed_amplitudes += mix_ratio * image.get_real_part()
+                mixed_amplitudes += mix_ratio * image.get_real_part() * image.get_window_mask()
             elif mode[i] == 'Imaginary':    
-                mixed_phases += mix_ratio * image.get_imaginary_part()
+                mixed_phases += mix_ratio * image.get_imaginary_part() * image.get_window_mask()
 
-            mixed_amplitudes *= image.get_window_mask()
-            mixed_phases *= image.get_window_mask()
+            # # compare between the mixed_amplitudes before and after the window mask
+            # print("mixed_amplitudes before window mask: ", mixed_amplitudes)
+            # mixed_amplitudes *= image.get_window_mask()
+            # mixed_phases *= image.get_window_mask()
+            # print("mixed_amplitudes after window mask: ", mixed_amplitudes)
+            #
+            # all_zeros1 = np.all(mixed_amplitudes == 0)  # Returns True
+            # print("All zeros:", all_zeros1)
 
         # Reconstruct the mixed image using the inverse Fourier transform
         if mode[0] == 'Magnitude' or mode[0] == 'Phase':

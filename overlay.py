@@ -15,9 +15,8 @@ class SignalEmitter(QObject):
 
 
 class overlay:
-    def __init__(self, plot_widget, img_data, new_img_data, mode, area_region):
+    def __init__(self, plot_widget, img_data, mode, area_region):
         self.data = img_data
-        self.new_img_data = new_img_data
         self.plot_ft = plot_widget
         self.mode = mode
         self.area_region = area_region
@@ -48,20 +47,26 @@ class overlay:
         shifted_data = self.data.get_shifted()
         self.sig_emitter.sig_ROI_changed.emit()
         self.update_mask_size()
+        self.sig_emitter.sig_ROI_changed.emit()  # Emit the signal when the ROI changes
 
     def update_mask_size(self):
         bounds = self.ft_roi.sceneBoundingRect()
-        self.x1, self.y1, self.x2, self.y2 = int(bounds.x()), int(bounds.y()), int(bounds.x() + bounds.width()), int(
-            bounds.y() + bounds.height())
-
-        # Create a mask of zeros with minimum width and height
-        mask = np.zeros(self.data.get_image_data().shape)
-        mask[self.y1:self.y2 + 1, self.x1:self.x2 + 1] = 1
-
+        self.x1, self.y1, self.x2, self.y2 = (
+            int(bounds.x()),
+            int(bounds.y()),
+            int(bounds.x() + bounds.width()),
+            int(bounds.y() + bounds.height()),
+        )
+        print("x1: ", self.x1, "y1: ", self.y1, "x2: ", self.x2, "y2: ", self.y2)
 
         # Based on another condition, invert the mask
         if self.area_region == 'Outside Area':
-            mask = 1 - mask
+            print("Outside Area")
+            mask = np.ones_like(self.data.get_image_data())
+            mask[self.y1:self.y2 + 1, self.x1:self.x2 + 1] = 0
+        else:
+            mask = np.zeros_like(self.data.get_image_data())
+            mask[self.y1:self.y2 + 1, self.x1:self.x2 + 1] = 1
 
         self.data.set_window_mask(mask)
 
@@ -75,5 +80,8 @@ class overlay:
         for pos in positions:
             roi.addScaleHandle(pos=pos, center=1 - pos)
 
-
+    def change_area_region(self, area_region):
+        self.area_region = area_region
+        self.update_mask_size()
+        self.sig_emitter.sig_ROI_changed.emit()
 
