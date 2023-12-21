@@ -10,7 +10,6 @@ import cv2
 import numpy as np
 import pandas as pd
 
-
 import os
 import sys
 from os import path
@@ -52,10 +51,10 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
         Parameters:
         - parent: The parent widget, which is typically None for the main window.
         """
-        
+
         super(MainApp, self).__init__(parent)
         self.setupUi(self)
-        self.images_dict = { # A dictionary to store Image instances and their associated widgets
+        self.images_dict = {  # A dictionary to store Image instances and their associated widgets
             self.image_1_widget: [self.graphicsView_1,  # FT plot widget
                                   self.image_1_widget.objectName(),  # widget name
                                   None,  # image instance
@@ -80,22 +79,23 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
                                   self.FT_combo_box_4,  # FT combo box
                                   None  # adjusted image instance
                                   ],
-        }  
+        }
         self.images_counter = 0  # A counter to keep track of the number of images
         self.mixing_ratios = []
         self.active_widget = None  # A variable to store the active widget
         self.active_widget_name = None  # A variable to store the active widget name
-        self.mode_combobox_list = [ self.mode_comboBox_1 , self.mode_comboBox_2 , self.mode_comboBox_3 , self.mode_comboBox_4] 
-        self.output_dictionary ={
+        self.mode_combobox_list = [self.mode_comboBox_1, self.mode_comboBox_2, self.mode_comboBox_3,
+                                   self.mode_comboBox_4]
+        self.output_dictionary = {
             "Viewport 1": self.output_image_1,
             "Viewport 2": self.output_image_2,
         }
-        self.sliders_list = [self.slider_1 , self.slider_2 , self.slider_3 , self.slider_4]
-        self.selection_modes_dict = { "Magnitude": ["Magnitude", "Phase"],
-                                        "Phase": [ "Magnitude", "Phase"],
-                                        "Real": ["Real", "Imaginary"],
-                                        "Imaginary": ["Real", "Imaginary"]
-                                        }
+        self.sliders_list = [self.slider_1, self.slider_2, self.slider_3, self.slider_4]
+        self.selection_modes_dict = {"Magnitude": ["Magnitude", "Phase"],
+                                     "Phase": ["Magnitude", "Phase"],
+                                     "Real": ["Real", "Imaginary"],
+                                     "Imaginary": ["Real", "Imaginary"]
+                                     }
         self.brightness = 0
         self.contrast = 0
         self.mouse_dragging = False  # Flag to track if the mouse is dragging
@@ -148,6 +148,7 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
     def mouse_release_event0(self, event, w):
         if event.button() == Qt.LeftButton:
             self.mouse_dragging = False
+
     def mouse_release_event(self, event, w):
         if self.rubber_band.isVisible():
             selected_region = self.rubber_band.geometry()
@@ -155,18 +156,19 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
             self.rubber_band.hide()
             # Get the dictionary key associated with the widget
             desired_key = next((key for key, value in self.images_dict.items() if value[0] == w and value[2]), None)
-            region_selected = self.images_dict[desired_key][2].get_selected_region(selected_region, self.images_dict[desired_key][2].get_magnitude_spectrum())
-    
+            region_selected = self.images_dict[desired_key][2].get_selected_region(selected_region,
+                                                                                   self.images_dict[desired_key][
+                                                                                       2].get_magnitude_spectrum())
+
     def connect_comboboxes(self, is_connected=True):
-            if is_connected:
-                for i in range(1, 5):
-                    combobox = getattr(self, f"mode_comboBox_{i}")
-                    combobox.currentIndexChanged.connect(functools.partial(self.handle_mode_combobox_change, i))
-            else:
-                for i in range(1, 5):
-                    combobox = getattr(self, f"mode_comboBox_{i}")
-                    combobox.currentIndexChanged.disconnect()
-            
+        if is_connected:
+            for i in range(1, 5):
+                combobox = getattr(self, f"mode_comboBox_{i}")
+                combobox.currentIndexChanged.connect(functools.partial(self.handle_mode_combobox_change, i))
+        else:
+            for i in range(1, 5):
+                combobox = getattr(self, f"mode_comboBox_{i}")
+                combobox.currentIndexChanged.disconnect()
 
     def handle_button(self):
         # Connect the clicked signal to the browse_image method
@@ -194,8 +196,6 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
         self.brightness = 0
         self.contrast = 0
         self.apply_brightness_contrast(self.active_widget)
-
-
 
     def apply_brightness_contrast(self, widget, alpha=1.0, beta=0):
         if self.images_dict[widget][2] is None:
@@ -235,7 +235,6 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
             self.browse_image(widget)
         if event.button() == pg.QtCore.Qt.RightButton:
             self.delete_image(widget)
-        
 
     def update_active_widget(self, active_widget):
         # Define a list containing all the widgets you want to manage
@@ -287,6 +286,7 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
         for widget_name, value in self.images_dict.items():
             if value[2] is None:
                 continue
+            value[2].set_image_size(min_width, min_height)
             image_data = value[2].get_image_data()
             resized_image = cv2.resize(image_data, (min_width, min_height))
             height, width = resized_image.shape
@@ -354,13 +354,15 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
         # If desired_key is None, then there was no matching widget in the dictionary
         if desired_key is None:
             return
+
         # Create an instance of the overlay class
         self.overlay_instance = overlay(self.images_dict[desired_key][0],
                                         self.images_dict[desired_key][2],
                                         self.images_dict[desired_key][4],
                                         current_text,
-                                        area_region
+                                        area_region,
                                         )
+        self.mix_images()
 
     def plot_image_view(self, image_data, widget):
 
@@ -395,24 +397,26 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
     def mix_images(self):
         """Mix images using the slider value"""
         # Implement logic to mix images using the slider value
+
         self.progressBar.setValue(0)
         if self.images_dict:
             min_width, min_height = self.get_min_size()
             images_lists = []
-            
+
             for image_list in self.images_dict.values():
-                
+
                 if image_list[2] is None:
                     continue
                 else:
                     image_list[2].set_image_size(min_width, min_height)
-                    print(f"image after resize{image_list[2].get_image_size()}")
-                    images_lists.append(image_list[4])
-                
+                    images_lists.append(image_list[2])
+
+            self.overlay_instance.update_mask_size()
+
             mix = ImageMixer(images_lists)
             slider_values, mode = self.get_slider_mode_values()
             self.progressBar.setValue(25)
-            
+
             output_image = mix.mix_images(slider_values, min_width, min_height, mode)
             self.progressBar.setValue(50)
             # Create a QImage from the output_image
@@ -420,9 +424,9 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
             image_data = bytes(output_image.data)
             current_view = self.comboBox_2.currentText()
             self.progressBar.setValue(75)
-            self.plot_images(min_width, min_height,self.output_dictionary[current_view] , image_data)
-            self.progressBar.setValue(100)  
-            
+            self.plot_images(min_width, min_height, self.output_dictionary[current_view], image_data)
+            self.progressBar.setValue(100)
+
     def get_slider_mode_values(self):
 
         """Get the slider values and normalize them"""

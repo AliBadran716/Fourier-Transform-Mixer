@@ -22,6 +22,7 @@ class overlay:
         self.mode = mode
         self.area_region = area_region
 
+
         # Signal emitter class to emit custom signals
         self.sig_emitter = SignalEmitter()
         shifted_data = self.data.get_shifted()
@@ -46,22 +47,23 @@ class overlay:
     def region_update(self):
         shifted_data = self.data.get_shifted()
         self.sig_emitter.sig_ROI_changed.emit()
+        self.update_mask_size()
+
+    def update_mask_size(self):
         bounds = self.ft_roi.sceneBoundingRect()
-        self.x1, self.y1, self.x2, self.y2 = bounds.x(), bounds.y(), bounds.x() + bounds.width(), bounds.y() + bounds.height()
-        # print(self.x1, self.y1, self.x2, self.y2)
-        mask = np.zeros_like(self.data)
-        mask[self.y1:self.y2+1, self.x1:self.x2+1] = 1
+        self.x1, self.y1, self.x2, self.y2 = int(bounds.x()), int(bounds.y()), int(bounds.x() + bounds.width()), int(
+            bounds.y() + bounds.height())
+
+        # Create a mask of zeros with minimum width and height
+        mask = np.zeros(self.data.get_image_data().shape)
+        mask[self.y1:self.y2 + 1, self.x1:self.x2 + 1] = 1
+
 
         # Based on another condition, invert the mask
         if self.area_region == 'Outside Area':
             mask = 1 - mask
 
-        # new_img = self.ft_roi.getArrayRegion(shifted_data[self.mode], self.img_item_ft)
-
-        # if self.area_region == 'Outside Area':
-        #     new_img = shifted_data[self.mode] - new_img
-
-        # self.new_img_data.set_image_data(np.fft.ifft2(np.fft.ifftshift(new_img)))
+        self.data.set_window_mask(mask)
 
     def calc_imag_ft(self):
         shifted_data = self.data.get_shifted()

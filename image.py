@@ -7,6 +7,7 @@ class Image:
         self.image_data = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
         self.sampling_frequency_x = 1.0 / self.image_data.shape[1]
         self.sampling_frequency_y = 1.0 / self.image_data.shape[0]
+        self.window_mask = np.ones(self.image_data.shape)
         self.compute_fourier_transform()
 
     def get_selected_region(self, selected_region, main_region):
@@ -22,6 +23,12 @@ class Image:
     def set_image_data(self, image_data):
         self.image_data = image_data
         self.compute_fourier_transform()
+
+    def set_window_mask(self, window_mask):
+        self.window_mask = window_mask
+
+    def get_window_mask(self):
+        return self.window_mask
 
     def compute_fourier_transform(self):
         self.fourier_transform = np.fft.fft2(self.image_data)

@@ -21,6 +21,9 @@ class ImageMixer:
             elif mode[i] == 'Imaginary':    
                 mixed_phases += mix_ratio * image.get_imaginary_part()
 
+            mixed_amplitudes *= image.get_window_mask()
+            mixed_phases *= image.get_window_mask()
+
         # Reconstruct the mixed image using the inverse Fourier transform
         if mode[0] == 'Magnitude' or mode[0] == 'Phase':
             mixed_transform = mixed_amplitudes * np.exp(1j * mixed_phases)
