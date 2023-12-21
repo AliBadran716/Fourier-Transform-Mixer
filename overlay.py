@@ -46,13 +46,22 @@ class overlay:
     def region_update(self):
         shifted_data = self.data.get_shifted()
         self.sig_emitter.sig_ROI_changed.emit()
+        bounds = self.ft_roi.sceneBoundingRect()
+        self.x1, self.y1, self.x2, self.y2 = bounds.x(), bounds.y(), bounds.x() + bounds.width(), bounds.y() + bounds.height()
+        # print(self.x1, self.y1, self.x2, self.y2)
+        mask = np.zeros_like(self.data)
+        mask[self.y1:self.y2+1, self.x1:self.x2+1] = 1
 
-        new_img = self.ft_roi.getArrayRegion(shifted_data[self.mode], self.img_item_ft)
-
+        # Based on another condition, invert the mask
         if self.area_region == 'Outside Area':
-            new_img = shifted_data[self.mode] - new_img
+            mask = 1 - mask
 
-        self.new_img_data.set_image_data(np.fft.ifft2(np.fft.ifftshift(new_img)))
+        # new_img = self.ft_roi.getArrayRegion(shifted_data[self.mode], self.img_item_ft)
+
+        # if self.area_region == 'Outside Area':
+        #     new_img = shifted_data[self.mode] - new_img
+
+        # self.new_img_data.set_image_data(np.fft.ifft2(np.fft.ifftshift(new_img)))
 
     def calc_imag_ft(self):
         shifted_data = self.data.get_shifted()
