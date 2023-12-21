@@ -22,7 +22,8 @@ class overlay:
         self.mode = mode
         # Signal emitter class to emit custom signals
         self.sig_emitter = SignalEmitter()
-        self.ROI_Maxbounds = QRectF(0, 0, 100, 100)
+        shifted_data = self.data.get_shifted()
+        self.ROI_Maxbounds = QRectF(0, 0, shifted_data[self.mode].shape[1], shifted_data[self.mode].shape[0])
 
         self.plot_ft.clear()  # This will clear all items from the PlotWidget
         self.ft_view = self.plot_ft.addViewBox()
@@ -41,12 +42,12 @@ class overlay:
         self.ft_roi.sigRegionChangeFinished.connect(lambda: self.region_update(self.data))
 
     def region_update(self, img_data):
-        data = img_data.get_magnitude_spectrum()
+        shifted_data = self.data.get_shifted()
         self.sig_emitter.sig_ROI_changed.emit()
-        new_img = self.ft_roi.getArrayRegion(data[0], self.img_item_ft)
+
+        new_img = self.ft_roi.getArrayRegion(shifted_data[self.mode], self.img_item_ft)
         self.new_img_data.set_image_data(np.fft.ifft2(np.fft.ifftshift(new_img)))
         self.img_item_ft.setImage(self.new_img_data.get_magnitude_spectrum())
-        # self.img_data_modified_dict[DATA_IMG] = np.fft.ifft2(np.fft.ifftshift(new_img))
         self.calc_imag_ft()
 
     def calc_imag_ft(self):
@@ -59,8 +60,5 @@ class overlay:
         for pos in positions:
             roi.addScaleHandle(pos=pos, center=1 - pos)
 
-    def remove_image_item(self):
-        self.ft_view.removeItem(self.img_item_ft)  # This will remove the ImageItem from the view
-        self.img_item_ft = pg.ImageItem()
-        self.ft_view.addItem(self.img_item_ft)
+
 
