@@ -275,6 +275,7 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
             image_instance.set_image_size(min_width, min_height)
         # Update the third element of the list associated with self.active_widget
         self.images_dict[self.active_widget][2] = image_instance
+        self.images_dict[self.active_widget][4] = image_instance
         self.display_image()
         # Call Plot FT
         self.plot_FT(self.images_dict[self.active_widget][0], self.images_dict[self.active_widget][3])
@@ -354,7 +355,9 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
             return
         # Create an instance of the overlay class
         self.overlay_instance = overlay(self.images_dict[desired_key][0],
-                                        self.images_dict[desired_key][2])
+                                        self.images_dict[desired_key][2],
+                                        self.images_dict[desired_key][4],
+                                        current_text)
         #
         # # Compute Phase Shift for Normalizing
         # phase_shift = np.fft.fftshift(image_instance.get_fourier_transform())

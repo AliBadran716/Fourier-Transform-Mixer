@@ -19,6 +19,10 @@ class Image:
         selected_region_data = main_region[y:y + height, x:x + width]
         return selected_region_data
 
+    def set_image_data(self, image_data):
+        self.image_data = image_data
+        self.compute_fourier_transform()
+
     def compute_fourier_transform(self):
         self.fourier_transform = np.fft.fft2(self.image_data)
         self.shifted_fourier_transform = np.fft.fftshift(self.fourier_transform)
@@ -57,7 +61,13 @@ class Image:
         return self.image_data
 
     def get_shifted(self):
-        shifted_data = [self.shifted_fourier_transform, self.shifted_magnitude_spectrum, self.shifted_phase_spectrum, self.shifted_real_part, self.shifted_imaginary_part]
+        shifted_data = {
+            "FT": self.shifted_fourier_transform,
+            "FT Magnitude": self.shifted_magnitude_spectrum,
+            "FT Phase": self.shifted_phase_spectrum,
+            "FT Real": self.shifted_real_part,
+            "FT Imaginary": self.shifted_imaginary_part
+        }
         return shifted_data
 
     def set_image_size(self, width, height):   
