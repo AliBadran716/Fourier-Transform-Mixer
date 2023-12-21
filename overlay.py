@@ -15,11 +15,13 @@ class SignalEmitter(QObject):
 
 
 class overlay:
-    def __init__(self, plot_widget, img_data, new_img_data, mode):
+    def __init__(self, plot_widget, img_data, new_img_data, mode, area_region):
         self.data = img_data
         self.new_img_data = new_img_data
         self.plot_ft = plot_widget
         self.mode = mode
+        self.area_region = area_region
+
         # Signal emitter class to emit custom signals
         self.sig_emitter = SignalEmitter()
         shifted_data = self.data.get_shifted()
@@ -39,16 +41,18 @@ class overlay:
                              invertible=True, rotatable=False, maxBounds=self.ROI_Maxbounds)
         self.ft_view.addItem(self.ft_roi)
         self.add_scale_handles_ROI(self.ft_roi)
-        self.ft_roi.sigRegionChangeFinished.connect(lambda: self.region_update(self.data))
+        self.ft_roi.sigRegionChangeFinished.connect(self.region_update)
 
-    def region_update(self, img_data):
+    def region_update(self):
         shifted_data = self.data.get_shifted()
         self.sig_emitter.sig_ROI_changed.emit()
 
         new_img = self.ft_roi.getArrayRegion(shifted_data[self.mode], self.img_item_ft)
+
+        if self.area_region == 'Outside Area':
+            new_img = shifted_data[self.mode] - new_img
+
         self.new_img_data.set_image_data(np.fft.ifft2(np.fft.ifftshift(new_img)))
-        self.img_item_ft.setImage(self.new_img_data.get_magnitude_spectrum())
-        self.calc_imag_ft()
 
     def calc_imag_ft(self):
         shifted_data = self.data.get_shifted()

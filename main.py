@@ -275,6 +275,7 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
             image_instance.set_image_size(min_width, min_height)
         # Update the third element of the list associated with self.active_widget
         self.images_dict[self.active_widget][2] = image_instance
+        image_instance = Image(str(image_path))
         self.images_dict[self.active_widget][4] = image_instance
         self.display_image()
         # Call Plot FT
@@ -343,10 +344,10 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
 
     def plot_FT(self, widget, combobox):
 
-
         # Get the current text of the combobox
         current_text = combobox.currentText()
 
+        area_region = self.area_taken_region.currentText()
         # Get the dictionary key associated with the widget
         desired_key = next((key for key, value in self.images_dict.items() if value[0] == widget and value[2]), None)
 
@@ -357,65 +358,16 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
         self.overlay_instance = overlay(self.images_dict[desired_key][0],
                                         self.images_dict[desired_key][2],
                                         self.images_dict[desired_key][4],
-                                        current_text)
-        #
-        # # Compute Phase Shift for Normalizing
-        # phase_shift = np.fft.fftshift(image_instance.get_fourier_transform())
-        #
-        # # Compute the magnitude spectrum
-        # magnitude_spectrum = 20 * np.log(phase_shift)
-        #
-        # # Compute the phase spectrum
-        # phase_spectrum = np.angle(phase_shift)
-        #
-        # # Compute the real part
-        # real_part = 20 * np.log(np.abs(np.real(phase_shift)))
-        #
-        # # Compute the imaginary part
-        # imaginary_part = np.imag(phase_shift)
-        #
-        # if current_text == "FT Magnitude":
-        #     # Plot the magnitude spectrum
-        #     self.plot_image_view(magnitude_spectrum, widget)
-        #     # get height and width of the image
-        #     # height, width = magnitude_spectrum.shape
-        #     #
-        #     # image_data = bytes(magnitude_spectrum.data)
-        #     # plot image
-        #     # self.plot_images(width, height, widget, image_data, True)
-        # elif current_text == "FT Phase":
-        #     # Plot the phase spectrum
-        #     self.plot_image_view(phase_spectrum, widget)
-        #     # height, width = phase_spectrum.shape
-        #
-        #     # image_data = bytes(phase_spectrum.data)
-        #     # plot image
-        #     # self.plot_images(width, height, widget, image_data, True)
-        # elif current_text == "FT Real":
-        #     # Plot the real part
-        #     self.plot_image_view(real_part, widget)
-        #     # get height and width of the image
-        #     # height, width = real_part.shape
-        #
-        #     # image_data = bytes(real_part.data)
-        #     # plot image
-        #     # self.plot_images(width, height, widget, image_data, True)
-        # elif current_text == "FT Imaginary":
-        #     # Plot the imaginary part
-        #     self.plot_image_view(imaginary_part, widget)
-        #
-        #     # get height and width of the image
-        #     # height, width = imaginary_part.shape
-        #
-        #     # image_data = bytes(imaginary_part.data)
-        #     # plot image
-        #     # self.plot_images(width, height, widget, image_data, True)
+                                        current_text,
+                                        area_region
+                                        )
 
     def plot_image_view(self, image_data, widget):
 
         widget.ui.roiPlot.hide()
         # Set the image data
         widget.setImage(image_data)
+
     def delete_image(self, widget):
         # Check if the key is in the dictionary
         if widget in self.images_dict:
@@ -441,7 +393,7 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
         return min_width, min_height
 
     def mix_images(self):
-        '''Mix images using the slider value'''
+        """Mix images using the slider value"""
         # Implement logic to mix images using the slider value
         self.progressBar.setValue(0)
         if self.images_dict:
@@ -455,13 +407,13 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
                 else:
                     image_list[2].set_image_size(min_width, min_height)
                     print(f"image after resize{image_list[2].get_image_size()}")
-                    images_lists.append(image_list[2])
+                    images_lists.append(image_list[4])
                 
-            mix =  ImageMixer(images_lists)
-            slider_values , mode = self.get_slider_mode_values()
+            mix = ImageMixer(images_lists)
+            slider_values, mode = self.get_slider_mode_values()
             self.progressBar.setValue(25)
             
-            output_image = mix.mix_images(slider_values, min_width, min_height , mode)
+            output_image = mix.mix_images(slider_values, min_width, min_height, mode)
             self.progressBar.setValue(50)
             # Create a QImage from the output_image
             bytes_per_line = min_width
@@ -473,7 +425,7 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
             
     def get_slider_mode_values(self):
 
-        '''Get the slider values and normalize them'''
+        """Get the slider values and normalize them"""
         # Get the slider values
         slider_values = [
             self.slider_1.value(),
@@ -486,8 +438,7 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
         mode = []
         for combox_mode in self.mode_combobox_list:
             mode.append(combox_mode.currentText())
-        return normalized_slider_values , mode
-    
+        return normalized_slider_values, mode
 
     def handle_mode_combobox_change(self, index):
         # Get the current combobox that triggered the signal
@@ -500,7 +451,7 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
         # Disconnect the signal temporarily
         self.connect_comboboxes(False)
 
-        # Update the items of the remaining comboboxes
+        # Update the items of the remaining combo-boxes
         for i in range(1, 5):
             if i != index:
                 combobox = getattr(self, f"mode_comboBox_{i}")

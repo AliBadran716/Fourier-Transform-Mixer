@@ -279,22 +279,17 @@ QComboBox:on { /* shift the text when the popup opens */
           <item>
            <layout class="QHBoxLayout" name="horizontalLayout_7">
             <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_6">
-              <item>
-               <widget class="QLabel" name="label">
-                <property name="text">
-                 <string>Region Size</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QSlider" name="region_size_slider">
-                <property name="orientation">
-                 <enum>Qt::Horizontal</enum>
-                </property>
-               </widget>
-              </item>
-             </layout>
+             <spacer name="horizontalSpacer">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
             </item>
             <item>
              <widget class="QPushButton" name="pushButton_reset">
@@ -304,15 +299,15 @@ QComboBox:on { /* shift the text when the popup opens */
              </widget>
             </item>
             <item>
-             <widget class="QComboBox" name="area_taken_slider">
+             <widget class="QComboBox" name="area_taken_region">
               <item>
                <property name="text">
-                <string>Outside Area</string>
+                <string>Inside Area</string>
                </property>
               </item>
               <item>
                <property name="text">
-                <string>Inside Area</string>
+                <string>Outside Area</string>
                </property>
               </item>
              </widget>
