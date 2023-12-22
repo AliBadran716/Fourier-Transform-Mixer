@@ -1,10 +1,29 @@
 import numpy as np
 import cv2
+
 class ImageMixer:
     def __init__(self, images_list):
+        """
+        Constructor to initialize the ImageMixer.
+
+        Parameters:
+        - images_list: List of Image instances to be mixed.
+        """
         self.images_list = images_list
 
     def mix_images(self, mix_ratios, min_width, min_height, mode):
+        """
+        Mix images based on specified mix ratios, minimum width, height, and mode.
+
+        Parameters:
+        - mix_ratios: List of mixing ratios for each image.
+        - min_width: Minimum width for resizing.
+        - min_height: Minimum height for resizing.
+        - mode: List of mixing modes for each image.
+
+        Returns:
+        - Mixed image data.
+        """
         # Initialize variables for the mixed amplitude and phase
         mixed_amplitudes = np.zeros_like(self.images_list[0].get_magnitude_spectrum()).astype(np.float64)
         mixed_phases = np.zeros_like(self.images_list[0].get_phase_spectrum()).astype(np.float64)
@@ -22,7 +41,6 @@ class ImageMixer:
             elif mode[i] == 'Imaginary':
                 mixed_phases += mix_ratio * shifted['FT Imaginary'] * image.get_window_mask()
 
-
         # Reconstruct the mixed image using the inverse Fourier transform
         if mode[0] == 'Magnitude' or mode[0] == 'Phase':
             mixed_transform = mixed_amplitudes * np.exp(1j * mixed_phases)
@@ -33,3 +51,4 @@ class ImageMixer:
         mixed_image_data = cv2.resize(mixed_image_data, (min_width, min_height))
 
         return mixed_image_data
+

@@ -2,41 +2,37 @@ from PyQt5.QtCore import *
 import functools
 import sys
 from os import path
-
 import cv2
 import numpy as np
 import pyqtgraph as pg
-from PyQt5.QtCore import *
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPainter
 from PyQt5.QtGui import QPixmap, QImage
 from PyQt5.QtWidgets import (
     QApplication,
     QMainWindow,
+    QFileDialog,
+    QRubberBand,
+    QGraphicsScene,
+    QGraphicsPixmapItem,
+    QSizePolicy,
 )
-from PyQt5.QtWidgets import QFileDialog
-from PyQt5.QtWidgets import QRubberBand, QGraphicsScene, QGraphicsPixmapItem
-from PyQt5.QtWidgets import QSizePolicy
 from PyQt5.uic import loadUiType
-
 from image import Image
 from imageMixer import ImageMixer
 from overlay import overlay
 
-FORM_CLASS, _ = loadUiType(
-    path.join(path.dirname(__file__), "main.ui")
-)  # connects the Ui file with the Python file
+# Load the UI file
+FORM_CLASS, _ = loadUiType(path.join(path.dirname(__file__), "main.ui"))
 
-
-class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_class file
-    def __init__(self, parent=None):  # constructor to initiate the main window  in the design
+class MainApp(QMainWindow, FORM_CLASS):
+    def __init__(self, parent=None):
         """
         Constructor to initiate the main window in the design.
 
         Parameters:
         - parent: The parent widget, which is typically None for the main window.
         """
-
         super(MainApp, self).__init__(parent)
         self.setupUi(self)
         self.images_dict = {  # A dictionary to store Image instances and their associated widgets
@@ -89,6 +85,9 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
         self.handle_button()
 
     def handle_button(self):
+        """
+        Connect signals to corresponding slots.
+        """
         # Connect the clicked signal to the browse_image method
         for slider in self.sliders_list:
             slider.valueChanged.connect(self.mix_images)
@@ -110,8 +109,31 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
         # Connect the currentIndexChanged signal to the change_area_region method
         self.area_taken_region.currentIndexChanged.connect(
             lambda index: self.change_area_region(self.area_taken_region.currentText()))
+    
+    def connect_comboboxes(self, is_connected=True):
+        """
+        Connect or disconnect currentIndexChanged signals for combo-boxes.
+
+        Parameters:
+        - is_connected: Boolean flag indicating whether to connect or disconnect signals.
+        """
+        if is_connected:
+            for i in range(1, 5):
+                combobox = getattr(self, f"mode_comboBox_{i}")
+                combobox.currentIndexChanged.connect(functools.partial(self.handle_mode_combobox_change, i))
+        else:
+            for i in range(1, 5):
+                combobox = getattr(self, f"mode_comboBox_{i}")
+                combobox.currentIndexChanged.disconnect()
 
     def on_double_mouse_click(self, event, widget):
+        """
+        Handle double mouse click event.
+
+        Parameters:
+        - event: The mouse event.
+        - widget: The widget associated with the event.
+        """
         self.active_widget = widget
         if event.button() == pg.QtCore.Qt.LeftButton:
             self.browse_image(widget)
@@ -119,12 +141,26 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
             self.delete_image(widget)
 
     def mouse_press_event(self, event, w):
+        """
+        Handle mouse press event.
+
+        Parameters:
+        - event: The mouse event.
+        - w: The widget associated with the event.
+        """
         if event.button() == Qt.LeftButton:
             self.mouse_dragging = True
             self.initial_mouse_pos = event.pos()
             self.active_widget = w
 
     def mouse_move_event(self, event, w):
+        """
+        Handle mouse move event.
+
+        Parameters:
+        - event: The mouse event.
+        - w: The widget associated with the event.
+        """
         if self.images_dict[w][2] is None:
             return
 
@@ -142,46 +178,49 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
             self.mouse_dragging = False
 
     def mouse_release_event(self, event, w):
+        """
+        Handle mouse release event.
+
+        Parameters:
+        - event: The mouse event.
+        - w: The widget associated with the event.
+        """
         if event.button() == Qt.LeftButton:
             self.mouse_dragging = False
 
-    def connect_comboboxes(self, is_connected=True):
-        if is_connected:
-            for i in range(1, 5):
+    def handle_mode_combobox_change(self, index):
+        """
+        Handle the change in mode combo-box.
+
+        Parameters:
+        - index: The index of the combo-box that triggered the signal.
+        """
+        # Get the current combobox that triggered the signal
+        current_combobox = self.sender()
+
+        # Get the current text of the combobox
+        current_text = current_combobox.currentText()
+
+        # Disconnect the signal temporarily
+        self.connect_comboboxes(False)
+
+        # Update the items of the remaining combo-boxes
+        for i in range(1, 5):
+            if i != index:
                 combobox = getattr(self, f"mode_comboBox_{i}")
-                combobox.currentIndexChanged.connect(functools.partial(self.handle_mode_combobox_change, i))
-        else:
-            for i in range(1, 5):
-                combobox = getattr(self, f"mode_comboBox_{i}")
-                combobox.currentIndexChanged.disconnect()
+                combobox.clear()
+                combobox.addItems(self.selection_modes_dict[current_text])
 
-    def change_area_region(self, region):
-        for key, value in self.images_dict.items():
-            if value[4] is None:
-                continue
-            value[4].change_area_region(region)
-        # Mix images
-        self.mix_images()
-
-    def reset_brightness_contrast(self):
-        self.brightness = 0
-        self.contrast = 0
-        self.apply_brightness_contrast(self.active_widget)
-
-    def apply_brightness_contrast(self, widget, alpha=1.0, beta=0):
-        if self.images_dict[widget][2] is None:
-            return
-
-        image = np.float32(self.images_dict[widget][2].get_image_data())
-        alpha = 1.0 + self.contrast / 100.0
-        beta = self.brightness
-        image = alpha * (image - 128) + 128 + beta
-        image = np.clip(image, 0, 255).astype("uint8")
-
-        height, width = image.shape
-        self.plot_images(width, height, widget, image)
+        # Reconnect the signal
+        self.connect_comboboxes(True)
 
     def browse_image(self, widget):
+        """
+        Browse and open an image file.
+
+        Parameters:
+        - widget: The widget associated with the image.
+        """
         if self.images_counter == 4:
             return
         self.images_counter += 1
@@ -200,6 +239,9 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
         self.plot_FT(self.images_dict[widget][0], self.images_dict[widget][3])
 
     def display_image(self):
+        """
+        Display images in the associated widgets.
+        """
         min_width, min_height = self.get_min_size()
 
         for widget_name, value in self.images_dict.items():
@@ -212,7 +254,18 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
             image_data = bytes(resized_image.data)
             self.plot_images(width, height, widget_name, image_data, True)
 
+
     def plot_images(self, width, height, widget_name, image_data, is_input_image=False):
+        """
+        Plot images in the specified widget.
+
+        Parameters:
+        - width: Width of the image.
+        - height: Height of the image.
+        - widget_name: The name of the widget to plot the image.
+        - image_data: Image data to be displayed.
+        - is_input_image: Boolean flag indicating whether the image is an input image.
+        """
         bytes_per_line = width
 
         q_image = QImage(
@@ -249,19 +302,37 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
         widget_name.setContentsMargins(0, 0, 0, 0)
 
     def create_image_scene(self, image_view):
+        """
+        Create a QGraphicsScene for the specified image view.
+
+        Parameters:
+        - image_view: The QGraphicsView associated with the scene.
+
+        Returns:
+        - The created QGraphicsScene.
+        """
         # Create the QGraphicsScene and set it for the respective image widget
         image_scene = QGraphicsScene(image_view)
         image_view.setScene(image_scene)
+
         # Set size policy and other properties as needed
         image_view.setAlignment(Qt.AlignCenter)
         image_view.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+
         # Set render hints for smoother rendering (optional)
         image_view.setRenderHint(QPainter.Antialiasing, True)
         image_view.setRenderHint(QPainter.SmoothPixmapTransform, True)
         image_view.setRenderHint(QPainter.HighQualityAntialiasing, True)
         return image_scene
-
+    
     def plot_FT(self, widget, combobox):
+        """
+        Plot the Fourier Transform of the image in the specified widget.
+
+        Parameters:
+        - widget: The widget associated with the image.
+        - combobox: The combo-box associated with the widget.
+        """
         # Get the current text of the combobox
         current_text = combobox.currentText()
 
@@ -285,7 +356,42 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
         self.images_dict[desired_key][4] = overlay_instance
         self.mix_images()
 
+    def reset_brightness_contrast(self):
+        """
+        Reset the brightness and contrast values.
+        """
+        self.brightness = 0
+        self.contrast = 0
+        self.apply_brightness_contrast(self.active_widget)
+
+    def apply_brightness_contrast(self, widget, alpha=1.0, beta=0):
+        """
+        Apply brightness and contrast to the displayed image.
+
+        Parameters:
+        - widget: The widget associated with the image.
+        - alpha: Alpha value for contrast adjustment.
+        - beta: Beta value for brightness adjustment.
+        """
+        if self.images_dict[widget][2] is None:
+            return
+
+        image = np.float32(self.images_dict[widget][2].get_image_data())
+        alpha = 1.0 + self.contrast / 100.0
+        beta = self.brightness
+        image = alpha * (image - 128) + 128 + beta
+        image = np.clip(image, 0, 255).astype("uint8")
+
+        height, width = image.shape
+        self.plot_images(width, height, widget, image)
+
     def delete_image(self, widget):
+        """
+        Delete the specified image.
+
+        Parameters:
+        - widget: The widget associated with the image.
+        """
         # Check if the key is in the dictionary
         if widget in self.images_dict:
             # Set the third element of the list associated with the key to None
@@ -305,8 +411,15 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
         self.mix_images()
 
     def get_min_size(self):
+        """
+        Get the minimum width and height of all images.
+
+        Returns:
+        - A tuple containing the minimum width and height.
+        """
         # Get the minimum width and height of all images in the dictionary
         min_width = min_height = sys.maxsize
+
         for widget_name, value in self.images_dict.items():
             if value[2] is None:
                 continue
@@ -317,9 +430,10 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
         return min_width, min_height
 
     def mix_images(self):
-        """Mix images using the slider value"""
+        """
+        Mix images based on the slider values.
+        """
         # Implement logic to mix images using the slider value
-
         self.progressBar.setValue(0)
         if self.images_counter > 0:
             min_width, min_height = self.get_min_size()
@@ -350,8 +464,12 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
             self.progressBar.setValue(100)
 
     def get_slider_mode_values(self):
+        """
+        Get the normalized slider values and selected mode from combo-boxes.
 
-        """Get the slider values and normalize them"""
+        Returns:
+        - A tuple containing normalized slider values and the selected mode.
+        """
         # Get the slider values
         slider_values = [
             self.slider_1.value(),
@@ -366,28 +484,25 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
             mode.append(combox_mode.currentText())
         return normalized_slider_values, mode
 
-    def handle_mode_combobox_change(self, index):
-        # Get the current combobox that triggered the signal
-        current_combobox = self.sender()
+    def change_area_region(self, region):
+        """
+        Change the area region based on the user's selection.
 
-        # Get the current text of the combobox
-        current_text = current_combobox.currentText()
-
-        # Disconnect the signal temporarily
-        self.connect_comboboxes(False)
-
-        # Update the items of the remaining combo-boxes
-        for i in range(1, 5):
-            if i != index:
-                combobox = getattr(self, f"mode_comboBox_{i}")
-                combobox.clear()
-                combobox.addItems(self.selection_modes_dict[current_text])
-
-        # Reconnect the signal
-        self.connect_comboboxes(True)
+        Parameters:
+        - region: The selected region.
+        """
+        for key, value in self.images_dict.items():
+            if value[4] is None:
+                continue
+            value[4].change_area_region(region)
+        # Mix images
+        self.mix_images()
 
 
-def main():  # method to start app
+def main():
+    """
+    Main method to start the application.
+    """
     app = QApplication(sys.argv)
     window = MainApp()
     window.show()
