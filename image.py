@@ -5,8 +5,6 @@ from PyQt5.QtGui import QImage, QPixmap
 class Image:
     def __init__(self, image_path):
         self.image_data = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
-        self.sampling_frequency_x = 1.0 / self.image_data.shape[1]
-        self.sampling_frequency_y = 1.0 / self.image_data.shape[0]
         self.window_mask = np.ones(self.image_data.shape)
         self.compute_fourier_transform()
 
@@ -36,19 +34,18 @@ class Image:
 
         self.magnitude_spectrum = np.abs(self.fourier_transform)
         self.shifted_magnitude_spectrum = 20 * np.log(self.shifted_fourier_transform)
+        self.shifted_magnitude_spectrum_norm_abs = np.abs(self.shifted_fourier_transform)
 
         self.phase_spectrum = np.angle(self.fourier_transform)
         self.shifted_phase_spectrum = np.angle(self.shifted_fourier_transform)
 
         self.real_part = np.real(self.fourier_transform)
         self.shifted_real_part = 20 * np.log(np.abs(np.real(self.shifted_fourier_transform)))
+        self.shifted_real_part_norm_abs =np.real(self.shifted_fourier_transform)
 
         self.imaginary_part = np.imag(self.fourier_transform)
         self.shifted_imaginary_part = np.imag(self.shifted_fourier_transform)
 
-    def get_sampling_frequencies(self):
-        return self.sampling_frequency_x, self.sampling_frequency_y
-    
     def get_fourier_transform(self):
         return self.fourier_transform
     
@@ -73,6 +70,16 @@ class Image:
             "FT Magnitude": self.shifted_magnitude_spectrum,
             "FT Phase": self.shifted_phase_spectrum,
             "FT Real": self.shifted_real_part,
+            "FT Imaginary": self.shifted_imaginary_part
+        }
+        return shifted_data
+
+    def get_shifted_norm_abs(self):
+        shifted_data = {
+            "FT": self.shifted_fourier_transform,
+            "FT Magnitude": self.shifted_magnitude_spectrum_norm_abs,
+            "FT Phase": self.shifted_phase_spectrum,
+            "FT Real": self.shifted_real_part_norm_abs,
             "FT Imaginary": self.shifted_imaginary_part
         }
         return shifted_data

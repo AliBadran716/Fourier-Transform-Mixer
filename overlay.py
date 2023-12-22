@@ -21,7 +21,6 @@ class overlay:
         self.mode = mode
         self.area_region = area_region
 
-
         # Signal emitter class to emit custom signals
         self.sig_emitter = SignalEmitter()
         shifted_data = self.data.get_shifted()
@@ -37,7 +36,9 @@ class overlay:
 
         self.calc_imag_ft()
 
-        self.ft_roi = pg.ROI(pos=self.ft_view.viewRect().center(), size=(50, 50), hoverPen='b', resizable=True,
+        self.ft_roi = pg.ROI(pos=self.ft_view.viewRect().center(),
+                             size=(shifted_data[self.mode].shape[1], shifted_data[self.mode].shape[0]), hoverPen='b',
+                             resizable=True,
                              invertible=True, rotatable=False, maxBounds=self.ROI_Maxbounds)
         self.ft_view.addItem(self.ft_roi)
         self.add_scale_handles_ROI(self.ft_roi)
@@ -57,15 +58,15 @@ class overlay:
             int(bounds.x() + bounds.width()),
             int(bounds.y() + bounds.height()),
         )
-        print("x1: ", self.x1, "y1: ", self.y1, "x2: ", self.x2, "y2: ", self.y2)
 
         # Based on another condition, invert the mask
         if self.area_region == 'Outside Area':
             print("Outside Area")
-            mask = np.ones_like(self.data.get_image_data())
+            mask = np.ones(self.data.get_image_data().shape)
             mask[self.y1:self.y2 + 1, self.x1:self.x2 + 1] = 0
         else:
-            mask = np.zeros_like(self.data.get_image_data())
+            print("Inside Area")
+            mask = np.zeros(self.data.get_image_data().shape)
             mask[self.y1:self.y2 + 1, self.x1:self.x2 + 1] = 1
 
         self.data.set_window_mask(mask)
@@ -82,6 +83,6 @@ class overlay:
 
     def change_area_region(self, area_region):
         self.area_region = area_region
+        print('area region', self.area_region)
         self.update_mask_size()
         self.sig_emitter.sig_ROI_changed.emit()
-

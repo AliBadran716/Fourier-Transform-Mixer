@@ -11,30 +11,23 @@ class ImageMixer:
 
         # Mix the amplitudes and phases based on the mix ratios
         for i, image in enumerate(self.images_list):
+            shifted = image.get_shifted_norm_abs()
             mix_ratio = mix_ratios[i]
             if mode[i] == 'Magnitude':
-                mixed_amplitudes += mix_ratio * image.get_magnitude_spectrum() * image.get_window_mask()
+                mixed_amplitudes += mix_ratio * shifted['FT Magnitude'] * image.get_window_mask()
             elif mode[i] == 'Phase':
-                mixed_phases += mix_ratio * image.get_phase_spectrum() * image.get_window_mask()
+                mixed_phases += mix_ratio * shifted['FT Phase'] * image.get_window_mask()
             elif mode[i] == 'Real':
-                mixed_amplitudes += mix_ratio * image.get_real_part() * image.get_window_mask()
-            elif mode[i] == 'Imaginary':    
-                mixed_phases += mix_ratio * image.get_imaginary_part() * image.get_window_mask()
+                mixed_amplitudes += mix_ratio * shifted['FT Real'] * image.get_window_mask()
+            elif mode[i] == 'Imaginary':
+                mixed_phases += mix_ratio * shifted['FT Imaginary'] * image.get_window_mask()
 
-            # # compare between the mixed_amplitudes before and after the window mask
-            # print("mixed_amplitudes before window mask: ", mixed_amplitudes)
-            # mixed_amplitudes *= image.get_window_mask()
-            # mixed_phases *= image.get_window_mask()
-            # print("mixed_amplitudes after window mask: ", mixed_amplitudes)
-            #
-            # all_zeros1 = np.all(mixed_amplitudes == 0)  # Returns True
-            # print("All zeros:", all_zeros1)
 
         # Reconstruct the mixed image using the inverse Fourier transform
         if mode[0] == 'Magnitude' or mode[0] == 'Phase':
             mixed_transform = mixed_amplitudes * np.exp(1j * mixed_phases)
         if mode[0] == 'Real' or mode[0] == 'Imaginary':
-            mixed_transform = mixed_amplitudes + 1j * mixed_phases  
+            mixed_transform = mixed_amplitudes + 1j * mixed_phases
         mixed_image_data = np.fft.ifft2(mixed_transform)
         mixed_image_data = np.abs(mixed_image_data).astype(np.uint8)
         mixed_image_data = cv2.resize(mixed_image_data, (min_width, min_height))

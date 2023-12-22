@@ -66,9 +66,7 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
                                   ],
         }
         self.images_counter = 0  # A counter to keep track of the number of images
-        self.mixing_ratios = []
         self.active_widget = None  # A variable to store the active widget
-        self.active_widget_name = None  # A variable to store the active widget name
         self.mode_combobox_list = [self.mode_comboBox_1, self.mode_comboBox_2, self.mode_comboBox_3,
                                    self.mode_comboBox_4]
         self.output_dictionary = {
@@ -87,32 +85,46 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
 
         self.initial_mouse_pos = QPoint(0, 0)
         self.progressBar.setValue(0)
-        # Set up the QGraphicsScene for the view
-        scene = QGraphicsScene()
-        self.setScene(scene)
-
-        self.setupImagesView()
         # Connect the mouse press event to the handle_buttons method
         self.handle_button()
 
+    def handle_button(self):
+        # Connect the clicked signal to the browse_image method
+        for slider in self.sliders_list:
+            slider.valueChanged.connect(self.mix_images)
+        self.pushButton_reset.clicked.connect(self.reset_brightness_contrast)
+
+        # Connect mouseDoubleClickEvent for each widget
+        for widget, value in self.images_dict.items():
+            widget.mouseDoubleClickEvent = lambda event, w=widget: self.on_double_mouse_click(event, w)
+            widget.mousePressEvent = lambda event, w=widget: self.mouse_press_event(event, w)
+            widget.mouseMoveEvent = lambda event, w=widget: self.mouse_move_event(event, w)
+            widget.mouseReleaseEvent = lambda event, w=widget: self.mouse_release_event(event, w)
+
+        # Connect currentIndexChanged for each QComboBox using a loop
+        for key, values in self.images_dict.items():
+            values[3].currentIndexChanged.connect(functools.partial(self.plot_FT, values[0], values[3]))
+
+        self.connect_comboboxes()
+
+        # Connect the currentIndexChanged signal to the change_area_region method
+        self.area_taken_region.currentIndexChanged.connect(
+            lambda index: self.change_area_region(self.area_taken_region.currentText()))
+
+    def on_double_mouse_click(self, event, widget):
+        self.active_widget = widget
+        if event.button() == pg.QtCore.Qt.LeftButton:
+            self.browse_image(widget)
+        if event.button() == pg.QtCore.Qt.RightButton:
+            self.delete_image(widget)
+
     def mouse_press_event(self, event, w):
-        self.rubber_band = QRubberBand(QRubberBand.Rectangle, w)
-        self.origin = event.pos()
-        self.rubber_band.setGeometry(QRect(self.origin, event.pos()).normalized())
-        self.rubber_band.show()
-
-    def mouse_move_event(self, event, w):
-        if self.rubber_band.isVisible():
-            self.rubber_band.setGeometry(QRect(self.origin, event.pos()).normalized())
-
-    def mouse_press_event0(self, event, w):
         if event.button() == Qt.LeftButton:
             self.mouse_dragging = True
             self.initial_mouse_pos = event.pos()
             self.active_widget = w
-            self.active_widget_name = w.objectName()
 
-    def mouse_move_event0(self, event, w):
+    def mouse_move_event(self, event, w):
         if self.images_dict[w][2] is None:
             return
 
@@ -125,25 +137,13 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
             self.brightness = diff.x()  # Use positive values for right movement
             self.contrast = -diff.y()  # Invert for up movement
             self.apply_brightness_contrast(w)
-            # self.initial_mouse_pos = event.pos()
 
         elif event.type() == QEvent.MouseButtonRelease and event.button() == Qt.LeftButton:
             self.mouse_dragging = False
 
-    def mouse_release_event0(self, event, w):
+    def mouse_release_event(self, event, w):
         if event.button() == Qt.LeftButton:
             self.mouse_dragging = False
-
-    def mouse_release_event(self, event, w):
-        if self.rubber_band.isVisible():
-            selected_region = self.rubber_band.geometry()
-            # Do something with the selected region
-            self.rubber_band.hide()
-            # Get the dictionary key associated with the widget
-            desired_key = next((key for key, value in self.images_dict.items() if value[0] == w and value[2]), None)
-            region_selected = self.images_dict[desired_key][2].get_selected_region(selected_region,
-                                                                                   self.images_dict[desired_key][
-                                                                                       2].get_magnitude_spectrum())
 
     def connect_comboboxes(self, is_connected=True):
         if is_connected:
@@ -155,30 +155,15 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
                 combobox = getattr(self, f"mode_comboBox_{i}")
                 combobox.currentIndexChanged.disconnect()
 
-    def handle_button(self):
-        # Connect the clicked signal to the browse_image method
-        for slider in self.sliders_list:
-            slider.valueChanged.connect(self.mix_images)
-        self.pushButton_reset.clicked.connect(self.reset_brightness_contrast)
+    def change_area_region(self, region):
+        for key, value in self.images_dict.items():
+            if value[4] is None:
+                continue
+            value[4].change_area_region(region)
+        # Mix images
+        self.mix_images()
 
-        # Connect mouseDoubleClickEvent for each widget
-        for widget, value in self.images_dict.items():
-            widget.mouseDoubleClickEvent = lambda event, w=widget: self.on_mouse_click(event, w)
-
-            # value[0].mousePressEvent = lambda event, w=value[0]: self.mouse_press_event(event, w)
-            # value[0].mouseMoveEvent = lambda event, w=value[0]: self.mouse_move_event(event, w)
-            # value[0].mouseReleaseEvent = lambda event, w=value[0]: self.mouse_release_event(event, w)
-            widget.mousePressEvent = lambda event, w=widget: self.mouse_press_event0(event, w)
-            widget.mouseMoveEvent = lambda event, w=widget: self.mouse_move_event0(event, w)
-            widget.mouseReleaseEvent = lambda event, w=widget: self.mouse_release_event0(event, w)
-
-            # Connect currentIndexChanged for each QComboBox using a loop
-        for key, values in self.images_dict.items():
-            values[3].currentIndexChanged.connect(functools.partial(self.plot_FT, values[0], values[3]))
-        self.connect_comboboxes()
-        # Connect the currentIndexChanged signal to the change_area_region method
-        self.area_taken_region.currentIndexChanged.connect(lambda : self.overlay_instance.change_area_region)
-    def reset_brightness_contrast(self, widget):
+    def reset_brightness_contrast(self):
         self.brightness = 0
         self.contrast = 0
         self.apply_brightness_contrast(self.active_widget)
@@ -193,58 +178,8 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
         image = alpha * (image - 128) + 128 + beta
         image = np.clip(image, 0, 255).astype("uint8")
 
-        hight, width = image.shape
-        self.plot_images(width, hight, widget, image)
-
-    def setScene(self, scene):
-        # Set the scene for each widget
-        for key, value in self.images_dict.items():
-            key.setScene(scene)
-            # value[0].setScene(scene)
-
-    def setupImagesView(self):
-
-        for widget_name, value in self.images_dict.items():
-            break
-            value[0].ui.histogram.hide()
-            value[0].ui.roiBtn.hide()
-            value[0].ui.menuBtn.hide()
-            value[0].ui.roiPlot.hide()
-            value[0].getView().setAspectLocked(False)
-            value[0].view.setAspectLocked(False)
-
-    def on_mouse_click(self, event, widget):
-        self.active_widget = widget
-        self.active_widget_name = widget.objectName()
-        if event.button() == pg.QtCore.Qt.LeftButton:
-            self.update_active_widget(widget)
-            self.browse_image(widget)
-        if event.button() == pg.QtCore.Qt.RightButton:
-            self.delete_image(widget)
-
-    def update_active_widget(self, active_widget):
-        # Define a list containing all the widgets you want to manage
-        widgets = [
-            self.image_1_widget,
-            self.image_2_widget,
-            self.image_3_widget,
-            self.image_4_widget
-        ]
-
-        # Iterate through each widget
-        for widget in widgets:
-            # Check if the current widget is the active_widget
-            widget_active = widget == active_widget
-
-            # Set the stylesheet based on whether the widget is active or not
-            widget.setStyleSheet(
-                "border: 1px solid  rgb(0, 133, 255);" if widget_active else "border: 1px solid rgba(0, 0, 0, 0.20);"
-            )
-
-        # Update the active state variables based on the active_widget
-        self.image_1_widget_active, self.image_2_widget_active, self.image_3_widget_active, self.image_4_widget_active = [
-            widget == active_widget for widget in widgets
-        ]
+        height, width = image.shape
+        self.plot_images(width, height, widget, image)
 
     def browse_image(self, widget):
         if self.images_counter == 4:
@@ -258,11 +193,11 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
         if self.images_counter != 1:
             min_width, min_height = self.get_min_size()
             image_instance.set_image_size(min_width, min_height)
-        # Update the third element of the list associated with self.active_widget
-        self.images_dict[self.active_widget][2] = image_instance
+        # Update the image instance of the list associated with widget
+        self.images_dict[widget][2] = image_instance
         self.display_image()
         # Call Plot FT
-        self.plot_FT(self.images_dict[self.active_widget][0], self.images_dict[self.active_widget][3])
+        self.plot_FT(self.images_dict[widget][0], self.images_dict[widget][3])
 
     def display_image(self):
         min_width, min_height = self.get_min_size()
@@ -339,24 +274,16 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
             return
 
         # Create an instance of the overlay class
-        self.overlay_instance = overlay(self.images_dict[desired_key][0],
-                                        self.images_dict[desired_key][2],
-                                        current_text,
-                                        area_region,
-                                        )
+        overlay_instance = overlay(self.images_dict[desired_key][0],
+                                   self.images_dict[desired_key][2],
+                                   current_text,
+                                   area_region,
+                                   )
         # Connect the sig_ROI_changed signal to the mix_images method
-        self.overlay_instance.sig_emitter.sig_ROI_changed.connect(self.mix_images)
-        # Connect the currentIndexChanged signal to the change_area_region method
-        self.area_taken_region.currentIndexChanged.connect(self.overlay_instance.change_area_region)
+        overlay_instance.sig_emitter.sig_ROI_changed.connect(self.mix_images)
         # Update the dictionary
-        self.images_dict[desired_key][4] = self.overlay_instance
+        self.images_dict[desired_key][4] = overlay_instance
         self.mix_images()
-
-    def plot_image_view(self, image_data, widget):
-
-        widget.ui.roiPlot.hide()
-        # Set the image data
-        widget.setImage(image_data)
 
     def delete_image(self, widget):
         # Check if the key is in the dictionary
@@ -369,6 +296,13 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
 
             # Decrement the images_counter
             self.images_counter -= 1
+        # clear the FT plot
+        self.images_dict[widget][0].clear()
+        # delete all instances
+        self.images_dict[widget][2] = None
+        self.images_dict[widget][4] = None
+        # recompute the images
+        self.mix_images()
 
     def get_min_size(self):
         # Get the minimum width and height of all images in the dictionary
@@ -387,7 +321,7 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
         # Implement logic to mix images using the slider value
 
         self.progressBar.setValue(0)
-        if self.images_dict:
+        if self.images_counter > 0:
             min_width, min_height = self.get_min_size()
             images_lists = []
 
@@ -435,7 +369,6 @@ class MainApp(QMainWindow, FORM_CLASS):  # go to the main window in the form_cla
     def handle_mode_combobox_change(self, index):
         # Get the current combobox that triggered the signal
         current_combobox = self.sender()
-        print(current_combobox.objectName())
 
         # Get the current text of the combobox
         current_text = current_combobox.currentText()
@@ -458,7 +391,7 @@ def main():  # method to start app
     app = QApplication(sys.argv)
     window = MainApp()
     window.show()
-    app.exec_()  # infinte Loop
+    app.exec_()  # infinite Loop
 
 
 if __name__ == "__main__":
