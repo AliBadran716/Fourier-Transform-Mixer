@@ -40,25 +40,29 @@ class MainApp(QMainWindow, FORM_CLASS):
                                   self.image_1_widget.objectName(),  # widget name
                                   None,  # image instance
                                   self.FT_combo_box_1,  # FT combo box
-                                  None  # overlay instance
+                                  None,  # overlay instance
+                                  None #modified image
                                   ],
             self.image_2_widget: [self.graphicsView_2,  # FT plot widget
                                   self.image_2_widget.objectName(),  # widget name
                                   None,  # image instance
                                   self.FT_combo_box_2,  # FT combo box
-                                  None  # overlay instance
+                                  None,  # overlay instance
+                                  None #modified image
                                   ],
             self.image_3_widget: [self.graphicsView_3,  # FT plot widget
                                   self.image_3_widget.objectName(),  # widget name
                                   None,  # image instance
                                   self.FT_combo_box_3,  # FT combo box
-                                  None  # overlay instance
+                                  None,  # overlay instance
+                                  None #modified image
                                   ],
             self.image_4_widget: [self.graphicsView_4,  # FT plot widget
                                   self.image_4_widget.objectName(),  # widget name
                                   None,  # image instance
                                   self.FT_combo_box_4,  # FT combo box
-                                  None  # overlay instance
+                                  None,  # overlay instance
+                                  None #modified image
                                   ],
         }
         self.images_counter = 0  # A counter to keep track of the number of images
@@ -229,11 +233,14 @@ class MainApp(QMainWindow, FORM_CLASS):
             self, "Open Image", "", "Image Files (*.jpg *.gif *.png *.jpeg *.svg)"
         )
         image_instance = Image(str(image_path))
+        image_instance_2 = Image(str(image_path))
         if self.images_counter != 1:
             min_width, min_height = self.get_min_size()
             image_instance.set_image_size(min_width, min_height)
+            image_instance_2.set_image_size(min_width, min_height)
         # Update the image instance of the list associated with widget
         self.images_dict[widget][2] = image_instance
+        self.images_dict[widget][5] = image_instance_2
         self.display_image()
         # Call Plot FT
         self.plot_FT(self.images_dict[widget][0], self.images_dict[widget][3])
@@ -245,10 +252,11 @@ class MainApp(QMainWindow, FORM_CLASS):
         min_width, min_height = self.get_min_size()
 
         for widget_name, value in self.images_dict.items():
-            if value[2] is None:
+            if value[5] is None:
                 continue
+            value[5].set_image_size(min_width, min_height)
             value[2].set_image_size(min_width, min_height)
-            image_data = value[2].get_image_data()
+            image_data = value[5].get_image_data()
             resized_image = cv2.resize(image_data, (min_width, min_height))
             height, width = resized_image.shape
             image_data = bytes(resized_image.data)
@@ -338,7 +346,7 @@ class MainApp(QMainWindow, FORM_CLASS):
 
         area_region = self.area_taken_region.currentText()
         # Get the dictionary key associated with the widget
-        desired_key = next((key for key, value in self.images_dict.items() if value[0] == widget and value[2]), None)
+        desired_key = next((key for key, value in self.images_dict.items() if value[0] == widget and value[5]), None)
 
         # If desired_key is None, then there was no matching widget in the dictionary
         if desired_key is None:
@@ -346,7 +354,7 @@ class MainApp(QMainWindow, FORM_CLASS):
 
         # Create an instance of the overlay class
         overlay_instance = overlay(self.images_dict[desired_key][0],
-                                   self.images_dict[desired_key][2],
+                                   self.images_dict[desired_key][5],
                                    current_text,
                                    area_region,
                                    )
@@ -383,6 +391,7 @@ class MainApp(QMainWindow, FORM_CLASS):
         image = np.clip(image, 0, 255).astype("uint8")
 
         height, width = image.shape
+        self.images_dict[widget][5].set_image_data(image)
         self.plot_images(width, height, widget, image)
 
     def delete_image(self, widget):
@@ -396,6 +405,7 @@ class MainApp(QMainWindow, FORM_CLASS):
         if widget in self.images_dict:
             # Set the third element of the list associated with the key to None
             self.images_dict[widget][2] = None
+            self.images_dict[widget][5] = None
 
             # Clear the QGraphicsScene of the widget
             widget.scene().clear()
@@ -406,6 +416,7 @@ class MainApp(QMainWindow, FORM_CLASS):
         self.images_dict[widget][0].clear()
         # delete all instances
         self.images_dict[widget][2] = None
+        self.images_dict[widget][5] = None
         self.images_dict[widget][4] = None
         # recompute the images
         self.mix_images()
@@ -421,9 +432,9 @@ class MainApp(QMainWindow, FORM_CLASS):
         min_width = min_height = sys.maxsize
 
         for widget_name, value in self.images_dict.items():
-            if value[2] is None:
+            if value[5] is None:
                 continue
-            image_data = value[2].get_image_data()
+            image_data = value[5].get_image_data()
             h, w = image_data.shape
             min_width = min(min_width, w)
             min_height = min(min_height, h)
@@ -441,11 +452,12 @@ class MainApp(QMainWindow, FORM_CLASS):
 
             for image_list in self.images_dict.values():
 
-                if image_list[2] is None:
+                if image_list[5] is None:
                     continue
                 else:
+                    image_list[5].set_image_size(min_width, min_height)
                     image_list[2].set_image_size(min_width, min_height)
-                    images_lists.append(image_list[2])
+                    images_lists.append(image_list[5])
 
                 image_list[4].update_mask_size()
 

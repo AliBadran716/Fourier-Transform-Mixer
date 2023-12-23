@@ -184,5 +184,14 @@ class Image:
         - image_size: Tuple containing (height, width) of the image.
         """
         return self.image_data.shape
+    def set_image_data(self, image_data):
+        """
+        Set the image data and compute the Fourier transform.
+
+        Parameters:
+        - image_data: New image data.
+        """
+        self.image_data = image_data
+        self.compute_fourier_transform()
 
 
