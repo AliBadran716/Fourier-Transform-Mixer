@@ -87,6 +87,10 @@ class MainApp(QMainWindow, FORM_CLASS):
         self.progressBar.setValue(0)
         # Connect the mouse press event to the handle_buttons method
         self.handle_button()
+        self.slider_1.setFixedHeight(161)
+        self.slider_2.setFixedHeight(161)
+        self.slider_3.setFixedHeight(161)
+        self.slider_4.setFixedHeight(161)
 
     def handle_button(self):
         """
