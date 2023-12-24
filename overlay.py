@@ -58,6 +58,31 @@ class overlay:
         self.sig_emitter.sig_ROI_changed.emit()
         self.update_mask_size()
         self.sig_emitter.sig_ROI_changed.emit()  # Emit the signal when the ROI changes
+    
+    def getRoi(self):
+        """
+        Get the ROI region.
+
+        Returns:
+        - x1: x-coordinate of the top-left corner of the ROI.
+        - y1: y-coordinate of the top-left corner of the ROI.
+        - x2: x-coordinate of the bottom-right corner of the ROI.
+        - y2: y-coordinate of the bottom-right corner of the ROI.
+        """
+        return self.ft_roi
+    def set_ROI(self, x1, y1, x2, y2):
+        """
+        Set the ROI region.
+
+        Parameters:
+        - x1: x-coordinate of the top-left corner of the ROI.
+        - y1: y-coordinate of the top-left corner of the ROI.
+        - x2: x-coordinate of the bottom-right corner of the ROI.
+        - y2: y-coordinate of the bottom-right corner of the ROI.
+        """
+        self.ft_roi.setPos(x1, y1)
+        self.ft_roi.setSize((x2 - x1), (y2 - y1))
+        self.update_mask_size()
 
     def update_mask_size(self):
         """

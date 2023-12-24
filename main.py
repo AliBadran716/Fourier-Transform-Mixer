@@ -364,10 +364,19 @@ class MainApp(QMainWindow, FORM_CLASS):
                                    )
         # Connect the sig_ROI_changed signal to the mix_images method
         overlay_instance.sig_emitter.sig_ROI_changed.connect(self.mix_images)
+        overlay_instance.sig_emitter.sig_ROI_changed.connect(lambda: self.modify_all_regions(overlay_instance.getRoi()))
         # Update the dictionary
         self.images_dict[desired_key][4] = overlay_instance
         self.mix_images()
-
+    
+    def modify_all_regions(self, roi: pg.ROI):
+        new_state = roi.getState()
+        for view in self.images_dict.values():
+            if view[4].getRoi() is not roi:
+                view[4].getRoi().setState(new_state, update = False) # Set the state of the other views without sending update signal
+                view[4].getRoi().stateChanged(finish = False) # Update the views after changing without sending stateChangeFinished signal
+                view[4].region_update(view[4].getRoi(),finish = False)  
+   
     def reset_brightness_contrast(self):
         """
         Reset the brightness and contrast values.
