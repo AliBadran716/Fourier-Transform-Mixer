@@ -5,6 +5,7 @@ from os import path
 import cv2
 import numpy as np
 import pyqtgraph as pg
+import logging
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPainter
 from PyQt5.QtGui import QPixmap, QImage
@@ -24,6 +25,8 @@ from overlay import overlay
 
 # Load the UI file
 FORM_CLASS, _ = loadUiType(path.join(path.dirname(__file__), "main.ui"))
+# Set up logging
+logging.basicConfig(filename='app.log', filemode='w', format='%(name)s - %(levelname)s - %(message)s', level=logging.DEBUG)
 
 class MainApp(QMainWindow, FORM_CLASS):
     def __init__(self, parent=None):
@@ -33,6 +36,7 @@ class MainApp(QMainWindow, FORM_CLASS):
         Parameters:
         - parent: The parent widget, which is typically None for the main window.
         """
+        logging.info('Initializing MainApp')
         super(MainApp, self).__init__(parent)
         self.setupUi(self)
         self.images_dict = {  # A dictionary to store Image instances and their associated widgets
@@ -41,28 +45,28 @@ class MainApp(QMainWindow, FORM_CLASS):
                                   None,  # image instance
                                   self.FT_combo_box_1,  # FT combo box
                                   None,  # overlay instance
-                                  None #modified image
+                                  None  # modified image
                                   ],
             self.image_2_widget: [self.graphicsView_2,  # FT plot widget
                                   self.image_2_widget.objectName(),  # widget name
                                   None,  # image instance
                                   self.FT_combo_box_2,  # FT combo box
                                   None,  # overlay instance
-                                  None #modified image
+                                  None  # modified image
                                   ],
             self.image_3_widget: [self.graphicsView_3,  # FT plot widget
                                   self.image_3_widget.objectName(),  # widget name
                                   None,  # image instance
                                   self.FT_combo_box_3,  # FT combo box
                                   None,  # overlay instance
-                                  None #modified image
+                                  None  # modified image
                                   ],
             self.image_4_widget: [self.graphicsView_4,  # FT plot widget
                                   self.image_4_widget.objectName(),  # widget name
                                   None,  # image instance
                                   self.FT_combo_box_4,  # FT combo box
                                   None,  # overlay instance
-                                  None #modified image
+                                  None  # modified image
                                   ],
         }
         self.images_counter = 0  # A counter to keep track of the number of images
@@ -96,12 +100,13 @@ class MainApp(QMainWindow, FORM_CLASS):
         """
         Connect signals to corresponding slots.
         """
+        logging.info('Connecting signals to slots')
         # Connect the clicked signal to the browse_image method
         for slider in self.sliders_list:
             slider.valueChanged.connect(self.mix_images)
         self.pushButton_reset.clicked.connect(self.reset_brightness_contrast)
 
-        # Connect mouseDoubleClickEvent for each widget
+        # Connect mouse Click Event for each widget
         for widget, value in self.images_dict.items():
             widget.mouseDoubleClickEvent = lambda event, w=widget: self.on_double_mouse_click(event, w)
             widget.mousePressEvent = lambda event, w=widget: self.mouse_press_event(event, w)
@@ -117,7 +122,7 @@ class MainApp(QMainWindow, FORM_CLASS):
         # Connect the currentIndexChanged signal to the change_area_region method
         self.area_taken_region.currentIndexChanged.connect(
             lambda index: self.change_area_region(self.area_taken_region.currentText()))
-    
+
     def connect_comboboxes(self, is_connected=True):
         """
         Connect or disconnect currentIndexChanged signals for combo-boxes.
@@ -229,6 +234,7 @@ class MainApp(QMainWindow, FORM_CLASS):
         Parameters:
         - widget: The widget associated with the image.
         """
+        logging.info('Browsing image')
         if self.images_counter == 4:
             return
         self.images_counter += 1
@@ -265,7 +271,6 @@ class MainApp(QMainWindow, FORM_CLASS):
             height, width = resized_image.shape
             image_data = bytes(resized_image.data)
             self.plot_images(width, height, widget_name, image_data, True)
-
 
     def plot_images(self, width, height, widget_name, image_data, is_input_image=False):
         """
@@ -336,7 +341,7 @@ class MainApp(QMainWindow, FORM_CLASS):
         image_view.setRenderHint(QPainter.SmoothPixmapTransform, True)
         image_view.setRenderHint(QPainter.HighQualityAntialiasing, True)
         return image_scene
-    
+
     def plot_FT(self, widget, combobox):
         """
         Plot the Fourier Transform of the image in the specified widget.
@@ -368,15 +373,19 @@ class MainApp(QMainWindow, FORM_CLASS):
         # Update the dictionary
         self.images_dict[desired_key][4] = overlay_instance
         self.mix_images()
-    
+
     def modify_all_regions(self, roi: pg.ROI):
         new_state = roi.getState()
         for view in self.images_dict.values():
+            if view[4] is None:
+                continue
             if view[4].getRoi() is not roi:
-                view[4].getRoi().setState(new_state, update = False) # Set the state of the other views without sending update signal
-                view[4].getRoi().stateChanged(finish = False) # Update the views after changing without sending stateChangeFinished signal
-                view[4].region_update(view[4].getRoi(),finish = False)  
-   
+                view[4].getRoi().setState(new_state, update=False)  # Set the state of the other views without
+                # sending update signal
+                view[4].getRoi().stateChanged(finish=False)  # Update the views after changing without sending
+                # stateChangeFinished signal
+                view[4].update_mask_size()  # Update the mask size
+
     def reset_brightness_contrast(self):
         """
         Reset the brightness and contrast values.
@@ -528,10 +537,12 @@ def main():
     """
     Main method to start the application.
     """
+    logging.info('Starting application')
     app = QApplication(sys.argv)
     window = MainApp()
     window.show()
     app.exec_()  # infinite Loop
+    logging.info('Exiting application')
 
 
 if __name__ == "__main__":
