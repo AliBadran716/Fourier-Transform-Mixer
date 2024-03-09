@@ -1,50 +1,79 @@
 # Fourier Transform Mixer
+![Images-Mixing](https://github.com/Muhannad159/Fourier-Transform-Mixer/assets/104541242/6ab94d7f-aeb4-4a1f-82bc-4b823c63850f)
 
 ## Project Overview
 
-- The Fourier Transform Mixer is a desktop program designed and implemented to illustrate the relative importance of magnitude and phase components in a 2D signal, particularly images. This tool provides insights into the frequencies and contributions of different components to the signal. It allows users to mix and visualize Fourier components of grayscale images, offering a versatile educational and analytical platform.
+The Fourier Transform Mixer is a desktop program designed to provide users with advanced tools for visualizing and manipulating Fourier Transform components of grayscale images. By offering a comprehensive set of features, this application facilitates in-depth analysis and exploration of image signals in the frequency domain.
+
+Additionally, the program includes a feature for edge detection, which enhances the application's capabilities by allowing users to identify and highlight edges within images. Edge detection is a fundamental technique in image processing, enabling various applications such as object detection, image segmentation, and feature extraction.
+
+The importance of edge detection lies in its ability to extract meaningful information from images, allowing users to identify boundaries and transitions between different objects or regions. This information is crucial for tasks such as image segmentation, where separating objects from background or identifying specific features within an image is necessary.
 
 ## Features
 
 ### Image Viewers
 
-- Open and View Images: Load up to four grayscale images simultaneously.
-- Color Conversion: Automatically converts colored images to grayscale.
-- Unified Sizes: Maintain a unified size for opened images based on the smallest size among them.
-- FT Components Display: View Fourier Transform components, including Magnitude, Phase, Real, and Imaginary parts.
-- Easy Browse: Change images by double-clicking on the viewer.
-- Brightness/Contrast: Adjust brightness and contrast for each image and its components.
+- **Open and View Images**: The application supports the simultaneous loading and viewing of up to four grayscale images. If a colored image is opened, the program automatically converts it to grayscale to maintain consistency.
+- **Unified Sizes**: Regardless of their original dimensions, the sizes of all opened images are adjusted to match the smallest size among them. This ensures uniformity in visualization.
+- **FT Components Display**: Each image viewport is equipped with two displays: one for the image itself and another for Fourier Transform components. Users can select from a dropdown menu to view Magnitude, Phase, Real, and Imaginary parts of the Fourier Transform.
+- **Easy Browse**: Users can effortlessly switch between images by double-clicking on the viewer, providing a seamless browsing experience.
+
+### Output Ports
+
+- **Two Output Viewports**: Mixer results can be displayed in one of two output viewports. Each output viewport mirrors the input image viewport, allowing users to compare the original and mixed images side by side.
+- **User Control**: Users have the flexibility to choose which viewport displays the mixer result, enabling convenient analysis and comparison.
+
+### Brightness/Contrast Adjustment
+
+- **Dynamic Adjustment**: Users can dynamically adjust the brightness and contrast of images and their components via mouse dragging. This feature enhances visualization and facilitates detailed analysis by allowing users to fine-tune image parameters.
 
 ### Components Mixer
 
-- Customizable Weights: Allow users to customize Fourier Transform weights for each image using sliders.
-- Realtime Mixing: Provide a progress bar for lengthy mixing operations.
-- Thread Handling: Cancel previous operations when a new mixing request is made.
+- **Customizable Weights**: Users can customize Fourier Transform weights for each image using sliders. This feature enables users to control the contribution of each image to the mixing process, facilitating fine-grained control over the output.
+- **Intuitive Interface**: Customized weights for two components are implemented in an intuitive user interface, ensuring ease of use and efficient interaction with the application.
 
 ### Regions Mixer
 
-- Region Selection: Enable users to pick regions for output, including inner (low frequencies) and outer (high frequencies).
-- Customizable Region Size: Allow users to customize the size or percentage of the selected region.
+- **Region Selection**: Users can select regions for output, including inner (low frequencies) or outer (high frequencies) regions, by drawing rectangles on each Fourier Transform display. The selected region is highlighted to indicate the user's choice.
+- **Customizable Region Size**: The size or percentage of the selected region can be customized using a slider or resize handles, providing users with flexibility in region selection and adjustment.
+
+### Realtime Mixing
+
+- **Progress Bar**: During lengthy mixing operations, a progress bar is displayed to indicate the status of the process. This feature keeps users informed about the progress and duration of the operation.
+- **Thread Handling**: The application handles threads effectively by canceling previous operations and starting new ones upon user request. This ensures smooth operation and responsiveness, preventing delays and interruptions.
+
+
+### Edge Detection
+
+- Edge detection plays a vital role in computer vision applications, as it helps in identifying and locating objects within images by detecting abrupt changes in intensity or color. This feature enables users to highlight edges, contours, and boundaries, making it easier to analyze and interpret visual data.
+
+- Edge detection algorithms, such as the Sobel operator, Canny edge detector, and Roberts cross operator, are commonly used to detect edges in images. These algorithms analyze the gradient of pixel intensities to identify regions with significant changes, indicating the presence of edges.
+
+- By integrating edge detection capabilities into the Fourier Transform Mixer, users can perform more advanced image analysis tasks, such as object recognition, image enhancement, and image segmentation. This enhances the versatility and utility of the application, making it a valuable tool for researchers, engineers, and image processing enthusiasts.
+![Edge-Detection](https://github.com/Muhannad159/Fourier-Transform-Mixer/assets/104541242/6ae8f115-efb9-4340-859b-02d59010a768)
+
+
 
 ## Code Practices
 
-- Object-Oriented Approach: Implement OOP concepts for better code organization and readability.
-- Logging: Utilize Python's logging library for tracking user interactions and debugging.
+- **Object-Oriented Approach**: The program follows an object-oriented approach to code organization and encapsulation. By encapsulating functionality within classes, the codebase remains modular and maintainable.
+- **Logging**: Python's logging library is utilized for tracking user interactions and debugging. Detailed logs help developers identify and resolve issues more efficiently, improving overall code quality and reliability.
 
 ## Tools Used
 
-- Python: The core programming language for implementation.
-- PyQt5: Used for creating the desktop application's GUI.
-- OpenCV: Employed for image processing tasks.
-- NumPy: Utilized for numerical operations and array manipulations.
-- PyQtGraph: Used for displaying and interacting with images and their components.
+- **Python**: Core programming language used for development.
+- **PyQt5**: GUI library used for creating the desktop application's interface.
+- **OpenCV**: Image processing library used for image manipulation tasks.
+- **NumPy**: Numerical computing library used for array operations and mathematical calculations.
+- **PyQtGraph**: Graphics library used for displaying and interacting with images and their components.
+
 
 ## Getting Started
 
 ### Clone Repository:
 
 ```bash
-git clone https://github.com/your-username/Fourier-Transform-Mixer.git
+git clone https://github.com/Muhannad159/Fourier-Transform-Mixer
 ```
 
 ### Install Dependencies:
@@ -59,11 +88,33 @@ pip install -r requirements.txt
 python main.py
 ```
 
-## Contributors
+## Contributors <a name = "Contributors"></a>
 
-| Name              | GitHub                                           |
-| ----------------- | ------------------------------------------------ |
-| Muhannad Abdallah | [@Muhannad159](https://github.com/Muhannad159)   |
-| Ali Badran        | [@AliBadran716](https://github.com/AliBadran716) |
-| Ahmed Ali         | [@ahmedalii3](https://github.com/ahmedalii3)     |
-| Hassan Hussein    | [@hassanowis](https://github.com/hassanowis)     |
+<table>
+  <tr>
+    <td align="center">
+    <a href="https://github.com/Muhannad159" target="_black">
+    <img src="https://avatars.githubusercontent.com/u/104541242?v=4" width="150px;" alt="Muhannad Abdallah"/>
+    <br />
+    <sub><b>Muhannad Abdallah</b></sub></a>
+    </td>
+  <td align="center">
+    <a href="https://github.com/AliBadran716" target="_black">
+    <img src="https://avatars.githubusercontent.com/u/102072821?v=4" width="150px;" alt="Ali Badran"/>
+    <br />
+    <sub><b>Ali Badran</b></sub></a>
+    </td>
+     <td align="center">
+    <a href="https://github.com/ahmedalii3" target="_black">
+    <img src="https://avatars.githubusercontent.com/u/110257687?v=4" width="150px;" alt="Ahmed Ali"/>
+    <br />
+    <sub><b>Ahmed Ali</b></sub></a>
+    </td>
+<td align="center">
+    <a href="https://github.com/hassanowis" target="_black">
+    <img src="https://avatars.githubusercontent.com/u/102428122?v=4" width="150px;" alt="Hassan Hussein"/>
+    <br />
+    <sub><b>Hassan Hussein</b></sub></a>
+    </td>
+      </tr>
+ </table>
