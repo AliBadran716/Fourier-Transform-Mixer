@@ -50,7 +50,8 @@ The importance of edge detection lies in its ability to extract meaningful infor
 - Edge detection algorithms, such as the Sobel operator, Canny edge detector, and Roberts cross operator, are commonly used to detect edges in images. These algorithms analyze the gradient of pixel intensities to identify regions with significant changes, indicating the presence of edges.
 
 - By integrating edge detection capabilities into the Fourier Transform Mixer, users can perform more advanced image analysis tasks, such as object recognition, image enhancement, and image segmentation. This enhances the versatility and utility of the application, making it a valuable tool for researchers, engineers, and image processing enthusiasts.
-![Edge-Detection](https://github.com/Muhannad159/Fourier-Transform-Mixer/assets/104541242/6ae8f115-efb9-4340-859b-02d59010a768)
+![image](https://github.com/AliBadran716/Fourier-Transform-Mixer/assets/102072821/6107764b-6ae0-4085-8f63-7abb0ca71d71)
+
 
 
 
